@@ -85,3 +85,21 @@ export const login = createAsyncThunk(
     }
   }
 );
+
+
+export const logout = createAsyncThunk(
+  "auth/logout",
+  async (_, { rejectWithValue }) => {
+    try {
+      await axios.post(`${BASE_URL}auth/logout`);
+
+      localStorage.removeItem("access_token");
+
+      return true;
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.detail || "Logout failed");
+    }
+  }
+);
+
+
