@@ -5,6 +5,7 @@ import Login from "./pages/Login";
 import Home from "./pages/Home";
 import CreateBlog from "./pages/CreateBlog";
 import BlogDetail from "./pages/BlogDetail";
+import AdminUsersPage from "./pages/AdminUsersPage";
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
         <Route path="/" element={<Home />} />
         <Route path="/blogs/create" element={<CreateBlog />} />
         <Route path="/blogs/:id" element={<BlogDetail />} />
+        <Route path="/users/manage" element={<AdminUsersPage />} />
       </Routes>
 
     </Router>
