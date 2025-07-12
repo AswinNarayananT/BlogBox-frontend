@@ -3,10 +3,14 @@ import { Toaster } from "react-hot-toast";
 import Register from "./pages/Register";
 import Login from "./pages/Login";
 import Home from "./pages/Home";
+import PublicRoute from "./routes/PublicRoute ";
+import ProtectedRoute from "./routes/ProtectedRoute ";
+import AdminRoute from "./routes/AdminRoute ";
 import CreateBlog from "./pages/CreateBlog";
 import BlogDetail from "./pages/BlogDetail";
 import AdminUsersPage from "./pages/AdminUsersPage";
 import UserProfile from "./pages/UserProfile";
+import NotFound from "./pages/NotFound";
 
 function App() {
   return (
@@ -15,13 +19,25 @@ function App() {
       <Toaster position="top-right" reverseOrder={false} />
       
       <Routes>
-        <Route path="/register" element={<Register />} />
-        <Route path="/login" element={<Login />} />
         <Route path="/" element={<Home />} />
-        <Route path="/blogs/:id" element={<BlogDetail />} />
-        <Route path="/profile" element={<UserProfile />} />
-        <Route path="/blogs/create" element={<CreateBlog />} />
-        <Route path="/users/manage" element={<AdminUsersPage />} />
+
+        <Route element={<PublicRoute />}>
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+        </Route>
+
+        <Route element={<ProtectedRoute />}>
+          <Route path="/blogs/:id" element={<BlogDetail />} />
+          <Route path="/profile" element={<UserProfile />} />
+        </Route>
+        
+        <Route element={<AdminRoute />}>
+          <Route path="/blogs/create" element={<CreateBlog />} />
+          <Route path="/users/manage" element={<AdminUsersPage />} />
+        </Route>
+
+        <Route path="*" element={<NotFound />} />
+  
       </Routes>
 
     </Router>

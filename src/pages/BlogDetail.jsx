@@ -33,13 +33,6 @@ export default function BlogDetail() {
   }, []);
 
   useEffect(() => {
-    if (!user) {
-      toast.error("Login to view this blog");
-      navigate("/login");
-    }
-  }, [user, navigate]);
-
-  useEffect(() => {
     if (blog && (!blog.interaction || !blog.interaction.seen)) {
       dispatch(markBlogAsSeen(blog.id));
     }
