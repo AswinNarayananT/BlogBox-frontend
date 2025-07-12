@@ -39,17 +39,10 @@ export const register = createAsyncThunk(
   "auth/register",
   async (formData, { rejectWithValue }) => {
     try {
-      let profilePicUrl = "";
-
-      if (formData.profile_pic instanceof File) {
-        profilePicUrl = await uploadToCloudinary(formData.profile_pic);
-      }
-
       const payload = {
         username: formData.username,
         email: formData.email,
         password: formData.password,
-        profile_pic: profilePicUrl,
       };
 
       const res = await axios.post(`${BASE_URL}auth/register`, payload);

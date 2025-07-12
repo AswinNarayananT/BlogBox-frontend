@@ -54,28 +54,22 @@ export const updateBlog = createAsyncThunk(
   "blogs/updateBlog",
   async ({ blogId, data }, { rejectWithValue }) => {
     try {
-      let imageUrl = data.image;
-      let attachmentUrl = data.attachment;
+      let payload = { ...data };
 
       if (data.image && typeof data.image !== "string") {
-        imageUrl = await uploadToCloudinary(data.image);
-        if (!imageUrl) {
-          return rejectWithValue("Image upload failed");
-        }
+        const imageUrl = await uploadToCloudinary(data.image);
+        if (!imageUrl) return rejectWithValue("Image upload failed");
+        payload.image = imageUrl;
       }
 
       if (data.attachment && typeof data.attachment !== "string") {
-        attachmentUrl = await uploadToCloudinary(data.attachment);
-        if (!attachmentUrl) {
-          return rejectWithValue("Attachment upload failed");
-        }
+        const attachmentUrl = await uploadToCloudinary(data.attachment);
+        if (!attachmentUrl) return rejectWithValue("Attachment upload failed");
+        payload.attachment = attachmentUrl;
       }
 
-      const payload = {
-        ...data,
-        image: imageUrl || null,
-        attachment: attachmentUrl || null,
-      };
+      if (!("image" in data)) delete payload.image;
+      if (!("attachment" in data)) delete payload.attachment;
 
       const res = await api.patch(`/blogs/${blogId}`, payload, {
         headers: {
@@ -185,6 +179,30 @@ export const toggleCommentApproval = createAsyncThunk(
     try {
       const res = await api.patch(`/blogs/comments/${commentId}/toggle-approval`);
       return res.data;
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.detail || "Failed to toggle approval");
+    }
+  }
+);
+
+
+export const deleteComment = createAsyncThunk(
+  "blogs/toggleCommentApproval",
+  async (commentId, { rejectWithValue }) => {
+    try {
+  
+      return res.data;
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.detail || "Failed to toggle approval");
+    }
+  }
+);
+
+export const updateComment = createAsyncThunk(
+  "blogs/toggleCommentApproval",
+  async (commentId, { rejectWithValue }) => {
+    try {
+
     } catch (err) {
       return rejectWithValue(err.response?.data?.detail || "Failed to toggle approval");
     }

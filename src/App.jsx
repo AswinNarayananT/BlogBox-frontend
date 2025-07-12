@@ -6,6 +6,7 @@ import Home from "./pages/Home";
 import CreateBlog from "./pages/CreateBlog";
 import BlogDetail from "./pages/BlogDetail";
 import AdminUsersPage from "./pages/AdminUsersPage";
+import UserProfile from "./pages/UserProfile";
 
 function App() {
   return (
@@ -17,8 +18,9 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
         <Route path="/" element={<Home />} />
-        <Route path="/blogs/create" element={<CreateBlog />} />
         <Route path="/blogs/:id" element={<BlogDetail />} />
+        <Route path="/profile" element={<UserProfile />} />
+        <Route path="/blogs/create" element={<CreateBlog />} />
         <Route path="/users/manage" element={<AdminUsersPage />} />
       </Routes>
 

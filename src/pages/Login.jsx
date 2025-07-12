@@ -4,6 +4,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { login } from "../redux/auth/authThunk";
 import { toast } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
+import Navbar from "../components/Navbar";
+import Footer from "../components/Footer";
 
 export default function Login() {
   const dispatch = useDispatch();
@@ -35,7 +37,6 @@ export default function Login() {
       ...prev,
       [name]: value,
     }));
-
     if (errors[name]) {
       setErrors((prev) => ({
         ...prev,
@@ -46,40 +47,32 @@ export default function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (!validateForm()) return;
 
     try {
       const result = await dispatch(login(formData)).unwrap();
       toast.success(`Welcome back, ${result.username}!`);
-
-      // Navigate to home or dashboard
       navigate("/");
-
     } catch (err) {
       toast.error(err || "Login failed");
     }
   };
 
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center p-4 relative overflow-hidden">
-      <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-gray-800 rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-pulse"></div>
-      <div className="absolute bottom-1/4 right-1/4 w-72 h-72 bg-gray-600 rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-pulse animation-delay-2000"></div>
-      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-72 h-72 bg-gray-700 rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-pulse animation-delay-4000"></div>
-
-      <div className="relative z-10 w-full max-w-md">
-        <div className="bg-gray-900/80 backdrop-blur-xl rounded-3xl p-8 shadow-2xl border border-gray-700">
-          <div className="text-center mb-8">
-            <div className="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto shadow-lg mb-6 hover:scale-105 transition-transform duration-300">
-              <LogIn size={32} className="text-black" />
-            </div>
-            <h1 className="text-4xl font-bold text-white mb-2">Welcome Back</h1>
-            <p className="text-gray-400">Sign in to your account</p>
-          </div>
+    <div className="flex flex-col min-h-screen bg-black text-white">
+      <Navbar />
+      <main className="flex-grow flex items-center justify-center m-7 p-10">
+        <div className="w-full max-w-md bg-gray-900/80 backdrop-blur-xl border border-gray-800 rounded-3xl p-10 shadow-2xl">
+          <h1 className="text-4xl font-extrabold text-center bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent mb-4">
+            Welcome Back
+          </h1>
+          <p className="text-center text-gray-400 mb-8">Sign in to your account</p>
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="relative">
-              <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">Email Address</label>
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
+                Email Address
+              </label>
               <div className="relative">
                 <input
                   type="email"
@@ -87,7 +80,9 @@ export default function Login() {
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-3 pl-12 bg-gray-800 border ${errors.email ? 'border-red-500' : 'border-gray-600'} rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-white transition-all`}
+                  className={`w-full px-4 py-3 pl-12 bg-gray-800 border ${
+                    errors.email ? "border-red-500" : "border-gray-700"
+                  } rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-white transition`}
                   placeholder="Enter your email"
                 />
                 <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
@@ -100,8 +95,10 @@ export default function Login() {
               )}
             </div>
 
-            <div className="relative">
-              <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">Password</label>
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
+                Password
+              </label>
               <div className="relative">
                 <input
                   type={showPassword ? "text" : "password"}
@@ -109,14 +106,16 @@ export default function Login() {
                   name="password"
                   value={formData.password}
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-3 pl-12 pr-12 bg-gray-800 border ${errors.password ? 'border-red-500' : 'border-gray-600'} rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-white transition-all`}
+                  className={`w-full px-4 py-3 pl-12 pr-12 bg-gray-800 border ${
+                    errors.password ? "border-red-500" : "border-gray-700"
+                  } rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-white transition`}
                   placeholder="Enter your password"
                 />
                 <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+                  className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition"
                 >
                   {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
                 </button>
@@ -135,11 +134,13 @@ export default function Login() {
                   type="checkbox"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
-                  className="w-4 h-4 text-white bg-gray-800 border-gray-600 rounded focus:ring-white focus:ring-2"
+                  className="w-4 h-4 text-white bg-gray-800 border-gray-700 rounded focus:ring-white focus:ring-2"
                 />
                 <span className="text-sm text-gray-300">Remember me</span>
               </label>
-              <button type="button" className="text-sm text-gray-400 hover:text-white transition-colors">Forgot password?</button>
+              <button type="button" className="text-sm text-gray-400 hover:text-white transition">
+                Forgot password?
+              </button>
             </div>
 
             <button
@@ -167,14 +168,15 @@ export default function Login() {
               <button
                 type="button"
                 onClick={() => navigate("/register")}
-                className="text-white hover:text-gray-300 font-semibold transition-colors"
+                className="text-white hover:text-gray-300 font-semibold transition"
               >
                 Sign Up
               </button>
             </p>
           </div>
         </div>
-      </div>
+      </main>
+      <Footer />
     </div>
   );
 }
