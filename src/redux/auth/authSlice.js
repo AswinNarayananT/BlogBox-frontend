@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { register, login, logout } from "./authThunk";
+import { register, login, updateUsername, updateProfilePic, changePassword, logout } from "./authThunk";
 
 const authSlice = createSlice({
   name: "auth",
@@ -40,6 +40,46 @@ const authSlice = createSlice({
         state.loading = false;
         state.error = action.payload;
       })
+
+      .addCase(updateUsername.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateUsername.fulfilled, (state, action) => {
+        state.loading = false;
+        state.user = action.payload;
+      })
+      .addCase(updateUsername.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+
+      .addCase(updateProfilePic.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(updateProfilePic.fulfilled, (state, action) => {
+        state.loading = false;
+        state.user = action.payload;
+      })
+      .addCase(updateProfilePic.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+
+      .addCase(changePassword.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(changePassword.fulfilled, (state) => {
+        state.loading = false;
+        state.error = null;
+      })
+      .addCase(changePassword.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+
 
       // Logout
       .addCase(logout.fulfilled, (state) => {

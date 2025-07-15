@@ -1,10 +1,9 @@
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
-
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { createBlog } from "../redux/blog/blogThunk";
-import {  FaArrowLeft } from "react-icons/fa";
+import { FaArrowLeft, FaImage, FaSpinner } from "react-icons/fa";
 import { useState } from "react";
 import { Formik, Form, Field, ErrorMessage } from "formik";
 import { toast } from "react-hot-toast";
@@ -14,13 +13,11 @@ export default function CreateBlog() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [imagePreview, setImagePreview] = useState(null);
-  const [attachmentPreview, setAttachmentPreview] = useState(null);
 
   const initialValues = {
     title: "",
     content: "",
     image: null,
-    attachment: null,
     is_published: true,
   };
 
@@ -29,11 +26,12 @@ export default function CreateBlog() {
     content: Yup.string().required("Content is required"),
   });
 
-  const handleSubmit = async (values, { setSubmitting }) => {
+  const handleSubmit = async (values, { setSubmitting, resetForm }) => {
     try {
       await dispatch(createBlog(values)).unwrap();
       toast.success("Blog created successfully!");
-      navigate("/"); 
+      resetForm();
+      navigate("/");
     } catch (error) {
       toast.error(error || "Failed to create blog");
     } finally {
@@ -46,7 +44,7 @@ export default function CreateBlog() {
       <Navbar />
 
       <div className="min-h-screen bg-black text-white pt-8 flex flex-col items-center">
-          <button
+        <button
           onClick={() => navigate(-1)}
           className="flex items-center bg-gray-800 text-white px-6 py-3 rounded-full hover:bg-gray-700 transition mb-8 self-start"
         >
@@ -87,36 +85,31 @@ export default function CreateBlog() {
 
               <div>
                 <label className="block mb-2 font-semibold">Image</label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => {
-                    setFieldValue("image", e.currentTarget.files[0]);
-                    setImagePreview(URL.createObjectURL(e.currentTarget.files[0]));
-                  }}
-                  className="w-full text-white"
-                />
+                <div className="flex items-center space-x-4">
+                  <label
+                    htmlFor="imageUpload"
+                    className="flex items-center justify-center bg-purple-700 hover:bg-purple-800 text-white px-4 py-2 rounded-lg cursor-pointer transition"
+                  >
+                    <FaImage className="mr-2" />
+                    Upload Image
+                  </label>
+                  <input
+                    id="imageUpload"
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      setFieldValue("image", e.currentTarget.files[0]);
+                      setImagePreview(URL.createObjectURL(e.currentTarget.files[0]));
+                    }}
+                    className="hidden"
+                  />
+                </div>
                 {imagePreview && (
                   <img
                     src={imagePreview}
                     alt="Preview"
                     className="mt-3 w-full h-48 object-cover rounded-lg border border-gray-700"
                   />
-                )}
-              </div>
-
-              <div>
-                <label className="block mb-2 font-semibold">Attachment</label>
-                <input
-                  type="file"
-                  onChange={(e) => {
-                    setFieldValue("attachment", e.currentTarget.files[0]);
-                    setAttachmentPreview(e.currentTarget.files[0].name);
-                  }}
-                  className="w-full text-white"
-                />
-                {attachmentPreview && (
-                  <p className="mt-2 text-gray-400">Selected: {attachmentPreview}</p>
                 )}
               </div>
 
@@ -128,9 +121,16 @@ export default function CreateBlog() {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-full font-bold hover:from-purple-700 hover:to-pink-700 transition-all duration-300 shadow-lg hover:shadow-purple-500/25 transform hover:scale-105"
+                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 rounded-full font-bold hover:from-purple-700 hover:to-pink-700 transition-all duration-300 shadow-lg hover:shadow-purple-500/25 transform hover:scale-105 flex items-center justify-center"
               >
-                {isSubmitting ? "Creating..." : "Create Blog"}
+                {isSubmitting ? (
+                  <>
+                    <FaSpinner className="animate-spin mr-2" />
+                    Creating...
+                  </>
+                ) : (
+                  "Create Blog"
+                )}
               </button>
             </Form>
           )}

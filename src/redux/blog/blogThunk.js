@@ -4,24 +4,24 @@ import { uploadToCloudinary } from "../auth/authThunk";
 
 export const fetchBlogs = createAsyncThunk(
   "blogs/fetchBlogs",
-  async ({ skip = 0, limit = 10 }, { rejectWithValue }) => {
+  async ({ page = 1, pageSize = 5 }, { rejectWithValue }) => {
     try {
-      const res = await api.get(`/blogs/?skip=${skip}&limit=${limit}`);
+      const res = await api.get(`/blogs/?page=${page}&page_size=${pageSize}`);
       console.log("Fetched blogs:", res.data);
       return res.data;
     } catch (err) {
-         console.log("❌ Full Axios error:", JSON.stringify(err, Object.getOwnPropertyNames(err)));
-  return rejectWithValue("Network error — check console & backend server.");
+      console.log("❌ Full Axios error:", JSON.stringify(err, Object.getOwnPropertyNames(err)));
+      return rejectWithValue("Network error — check console & backend server.");
     }
   }
 );
+
 
 export const createBlog = createAsyncThunk(
   "blogs/createBlog",
   async (blogData, { rejectWithValue }) => {
     try {
       let imageUrl = "";
-      let attachmentUrl = "";
 
       if (blogData.image && typeof blogData.image !== "string") {
         imageUrl = await uploadToCloudinary(blogData.image);
@@ -29,16 +29,9 @@ export const createBlog = createAsyncThunk(
         imageUrl = blogData.image;
       }
 
-      if (blogData.attachment && typeof blogData.attachment !== "string") {
-        attachmentUrl = await uploadToCloudinary(blogData.attachment);
-      } else if (typeof blogData.attachment === "string") {
-        attachmentUrl = blogData.attachment;
-      }
-
       const payload = {
         ...blogData,
         image: imageUrl || null,
-        attachment: attachmentUrl || null,
       };
 
       const res = await api.post("/blogs/", payload);
@@ -62,21 +55,11 @@ export const updateBlog = createAsyncThunk(
         payload.image = imageUrl;
       }
 
-      if (data.attachment && typeof data.attachment !== "string") {
-        const attachmentUrl = await uploadToCloudinary(data.attachment);
-        if (!attachmentUrl) return rejectWithValue("Attachment upload failed");
-        payload.attachment = attachmentUrl;
+      if (!("image" in data)) {
+        delete payload.image;
       }
 
-      if (!("image" in data)) delete payload.image;
-      if (!("attachment" in data)) delete payload.attachment;
-
-      const res = await api.patch(`/blogs/${blogId}`, payload, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-        },
-      });
-
+      const res = await api.patch(`/blogs/${blogId}`, payload);
       return res.data;
     } catch (err) {
       return rejectWithValue(err.response?.data?.detail || "Failed to update blog");

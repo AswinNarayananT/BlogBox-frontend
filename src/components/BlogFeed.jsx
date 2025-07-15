@@ -1,25 +1,32 @@
-import { FaUserCircle, FaThumbsUp, FaThumbsDown, FaEye, FaBookmark, FaQuoteLeft, FaCoffee } from "react-icons/fa";
+import {
+  FaUserCircle,
+  FaThumbsUp,
+  FaThumbsDown,
+  FaEye,
+  FaBookmark,
+  FaQuoteLeft,
+  FaCoffee,
+} from "react-icons/fa";
 import BlogLoader from "./BlogLoader";
 import { useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { fetchBlogs } from "../redux/blog/blogThunk";
 import { toast } from "react-hot-toast";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 const BlogFeed = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const { items: blogs, loading, error } = useSelector((state) => state.blogs);
+  const { items: blogs, loading, error, pagination } = useSelector((state) => state.blogs);
   const user = useSelector((state) => state.auth.user);
 
-  const skip = blogs.length;
-  const limit = 5;
+  // Local state for page
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 5;
 
   useEffect(() => {
-    if (blogs.length === 0) {
-      dispatch(fetchBlogs({ skip: 0, limit }));
-    }
-  }, []);
+    dispatch(fetchBlogs({ page: currentPage, pageSize }));
+  }, [currentPage]);
 
   useEffect(() => {
     if (error) {
@@ -27,8 +34,38 @@ const BlogFeed = () => {
     }
   }, [error]);
 
-  const loadMore = () => {
-    dispatch(fetchBlogs({ skip, limit }));
+  // Pagination controls
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
+
+  // Helper for generating page numbers
+  const renderPageNumbers = () => {
+    const totalPages = pagination?.total_pages || 1;
+    const pages = [];
+
+    // Show max 5 pages around current
+    const start = Math.max(1, currentPage - 2);
+    const end = Math.min(totalPages, currentPage + 2);
+
+    for (let i = start; i <= end; i++) {
+      pages.push(
+        <button
+          key={i}
+          onClick={() => handlePageChange(i)}
+          disabled={i === currentPage}
+          className={`px-3 py-1 rounded-full mx-1 ${
+            i === currentPage
+              ? "bg-purple-600 text-white"
+              : "bg-gray-700 text-gray-300 hover:bg-purple-500 hover:text-white transition-all"
+          }`}
+        >
+          {i}
+        </button>
+      );
+    }
+
+    return pages;
   };
 
   return (
@@ -124,15 +161,27 @@ const BlogFeed = () => {
 
       {loading && <BlogLoader />}
 
-      {blogs.length > 0 && (
-        <div className="text-center mt-16">
-          <button
-            onClick={loadMore}
-            disabled={loading}
-            className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed text-white px-8 py-4 rounded-full transition-all font-medium shadow-lg hover:shadow-purple-500/25 transform hover:scale-105 disabled:transform-none"
-          >
-            {loading ? "Loading..." : "Discover More Stories"}
-          </button>
+      {pagination?.total_pages > 1 && (
+        <div className="flex justify-center mt-12 flex-wrap">
+          {currentPage > 1 && (
+            <button
+              onClick={() => handlePageChange(currentPage - 1)}
+              className="bg-gray-700 text-gray-300 hover:bg-purple-500 hover:text-white px-3 py-1 rounded-full mx-1 transition-all"
+            >
+              Previous
+            </button>
+          )}
+
+          {renderPageNumbers()}
+
+          {currentPage < pagination.total_pages && (
+            <button
+              onClick={() => handlePageChange(currentPage + 1)}
+              className="bg-gray-700 text-gray-300 hover:bg-purple-500 hover:text-white px-3 py-1 rounded-full mx-1 transition-all"
+            >
+              Next
+            </button>
+          )}
         </div>
       )}
     </div>

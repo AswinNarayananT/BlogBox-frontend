@@ -40,6 +40,7 @@ api.interceptors.response.use(
         return api(originalRequest);
 
       } catch (refreshError) {
+        console.log("not refreshing")
         localStorage.removeItem("access_token");
         window.location.href = "/login"; 
         return Promise.reject(refreshError);

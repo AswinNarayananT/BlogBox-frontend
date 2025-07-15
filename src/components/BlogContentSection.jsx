@@ -203,33 +203,55 @@ export default function BlogContentSection({
       </div>
 
       {/* Image */}
-      {previewImage && (
-        <div className="relative mb-8">
-          <img
-            src={previewImage}
-            alt="Blog"
-            className="w-full h-[450px] object-cover rounded-2xl cursor-pointer shadow-lg"
-            onClick={() => setShowImagePreview(true)}
-          />
-          {user?.is_superuser && (
-            <>
-              <button
-                onClick={() => imageInputRef.current.click()}
-                className="absolute top-4 right-4 bg-gray-700/90 text-white p-3 rounded-full hover:bg-gray-800 transition-all duration-200 shadow-lg"
-              >
-                <FaEdit />
-              </button>
-              <input
-                type="file"
-                ref={imageInputRef}
-                onChange={handleImageSelect}
-                accept="image/*"
-                className="hidden"
-              />
-            </>
-          )}
-        </div>
-      )}
+     {previewImage ? (
+  <div className="relative mb-8">
+    <img
+      src={previewImage}
+      alt="Blog"
+      className="w-full h-[450px] object-cover rounded-2xl cursor-pointer shadow-lg"
+      onClick={() => setShowImagePreview(true)}
+    />
+    {user?.is_superuser && (
+      <>
+        <button
+          onClick={() => imageInputRef.current.click()}
+          className="absolute top-4 right-4 bg-gray-700/90 text-white p-3 rounded-full hover:bg-gray-800 transition-all duration-200 shadow-lg"
+        >
+          <FaEdit />
+        </button>
+        <input
+          type="file"
+          ref={imageInputRef}
+          onChange={handleImageSelect}
+          accept="image/*"
+          className="hidden"
+        />
+      </>
+    )}
+  </div>
+) : (
+  <>
+    {user?.is_superuser && (
+      <div className="flex justify-center mb-8">
+        <button
+          onClick={() => imageInputRef.current.click()}
+          className="flex items-center space-x-2 bg-gray-800 text-white px-5 py-3 rounded-full hover:bg-gray-700 transition-colors shadow-lg"
+        >
+          <FaPlus className="text-lg" />
+          <span>Add Image</span>
+        </button>
+        <input
+          type="file"
+          ref={imageInputRef}
+          onChange={handleImageSelect}
+          accept="image/*"
+          className="hidden"
+        />
+      </div>
+    )}
+  </>
+)}
+
 
       {/* Meta */}
       <div className="flex justify-center flex-wrap gap-6 text-gray-400 text-sm mb-10">

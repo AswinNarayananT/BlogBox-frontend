@@ -68,10 +68,11 @@ export const login = createAsyncThunk(
   "auth/login",
   async ({ email, password }, { rejectWithValue }) => {
     try {
-      const res = await axios.post(`${BASE_URL}auth/login`, {
-        email,
-        password,
-      });
+      const res = await axios.post(
+        `${BASE_URL}auth/login`,
+        { email, password },
+        { withCredentials: true }  
+      );
 
       localStorage.setItem("access_token", res.data.access_token);
 
@@ -81,6 +82,50 @@ export const login = createAsyncThunk(
     }
   }
 );
+
+export const updateUsername = createAsyncThunk(
+  "auth/updateUsername",
+  async (username, { rejectWithValue }) => {
+    try {
+      const res = await api.patch("/auth/update-profile", { username });
+      return res.data;
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.detail || "Failed to update username");
+    }
+  }
+);
+
+
+export const updateProfilePic = createAsyncThunk(
+  "auth/updateProfilePic",
+  async (file, { rejectWithValue }) => {
+    try {
+      const { url } = await uploadToCloudinary(file);
+      if (!url) throw new Error("Failed to upload image to Cloudinary");
+
+      const res = await api.patch("/auth/update-profile", { profile_pic: url });
+      return res.data;
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.detail || "Failed to update profile picture");
+    }
+  }
+);
+
+
+export const changePassword = createAsyncThunk(
+  "auth/changePassword",
+  async (passwordData, { rejectWithValue }) => {
+    try {
+      const response = await api.put("/auth/change-password", passwordData );
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.detail || "Failed to change password"
+      );
+    }
+  }
+);
+
 
 
 export const logout = createAsyncThunk(

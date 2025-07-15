@@ -14,36 +14,43 @@ import {
   FaCrown,
   FaUserShield,
   FaArrowLeft,
+  FaSpinner,
 } from "react-icons/fa";
 import { toast } from "react-hot-toast";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import { useNavigate } from "react-router-dom";
+import { updateUsername, updateProfilePic, changePassword } from "../redux/auth/authThunk";
 
 const UserProfile = () => {
   const dispatch = useDispatch();
-  const navigate =useNavigate()
+  const navigate = useNavigate();
   const user = useSelector((state) => state.auth.user);
-  
+  const globalLoading = useSelector((state) => state.auth.loading);
+
   const profilePicRef = useRef();
-  
+
   const [showEditModal, setShowEditModal] = useState(false);
-  const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [editData, setEditData] = useState({
     username: user?.username || "",
     profile_pic: null,
+  });
+  const [previewImage, setPreviewImage] = useState(user?.profile_pic || null);
+  const [imageLoading, setImageLoading] = useState(false);
+  const [usernameLoading, setUsernameLoading] = useState(false);
+  const [changingPassword, setChangingPassword] = useState(false);
+
+  const [showPasswords, setShowPasswords] = useState({
+    current: false,
+    new: false,
+    confirm: false,
   });
   const [passwordData, setPasswordData] = useState({
     currentPassword: "",
     newPassword: "",
     confirmPassword: "",
   });
-  const [showPasswords, setShowPasswords] = useState({
-    current: false,
-    new: false,
-    confirm: false,
-  });
-  const [previewImage, setPreviewImage] = useState(user?.profile_pic || null);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
 
   const handleEditProfile = () => {
     setEditData({
@@ -54,64 +61,78 @@ const UserProfile = () => {
     setShowEditModal(true);
   };
 
-  const handleImageSelect = (e) => {
+  const handleImageSelect = async (e) => {
     const file = e.target.files[0];
     if (file) {
       const reader = new FileReader();
-      reader.onload = () => {
-        setPreviewImage(reader.result);
-        setEditData(prev => ({ ...prev, profile_pic: file }));
-      };
+      reader.onload = () => setPreviewImage(reader.result);
       reader.readAsDataURL(file);
-    }
-  };
 
-  const handleUpdateProfile = async () => {
-    try {
-      const formData = new FormData();
-      formData.append("username", editData.username);
-      if (editData.profile_pic) {
-        formData.append("profile_pic", editData.profile_pic);
+      try {
+        setImageLoading(true);
+        await dispatch(updateProfilePic(file)).unwrap();
+        toast.success("Profile picture updated!");
+      } catch (err) {
+        toast.error(err || "Failed to update profile picture");
+      } finally {
+        setImageLoading(false);
       }
-      
-      // Replace with your actual update profile action
-      // await dispatch(updateProfile(formData)).unwrap();
-      
-      toast.success("Profile updated successfully!");
-      setShowEditModal(false);
-    } catch (error) {
-      toast.error("Failed to update profile");
     }
   };
 
-  const handleChangePassword = async () => {
-    if (passwordData.newPassword !== passwordData.confirmPassword) {
-      toast.error("New passwords don't match");
+  const handleUpdateUsername = async () => {
+    if (!editData.username.trim()) {
+      toast.error("Username cannot be empty");
       return;
     }
-    
     try {
-      // Replace with your actual change password action
-      // await dispatch(changePassword(passwordData)).unwrap();
-      
-      toast.success("Password changed successfully!");
-      setShowPasswordModal(false);
-      setPasswordData({
-        currentPassword: "",
-        newPassword: "",
-        confirmPassword: "",
-      });
-    } catch (error) {
-      toast.error("Failed to change password");
+      setUsernameLoading(true);
+      await dispatch(updateUsername(editData.username)).unwrap();
+      toast.success("Username updated!");
+      setShowEditModal(false);
+    } catch (err) {
+      toast.error(err || "Failed to update username");
+    } finally {
+      setUsernameLoading(false);
     }
   };
 
   const togglePasswordVisibility = (field) => {
-    setShowPasswords(prev => ({
-      ...prev,
-      [field]: !prev[field]
-    }));
+    setShowPasswords((prev) => ({ ...prev, [field]: !prev[field] }));
   };
+
+const handleChangePassword = async () => {
+  if (passwordData.newPassword !== passwordData.confirmPassword) {
+    toast.error("New passwords don't match");
+    return;
+  }
+
+  try {
+    setChangingPassword(true);
+
+    await dispatch(
+      changePassword({
+        current_password: passwordData.currentPassword,
+        new_password: passwordData.newPassword,
+      })
+    ).unwrap();
+
+    toast.success("Password changed successfully!");
+
+    setShowPasswordModal(false);
+    setPasswordData({
+      currentPassword: "",
+      newPassword: "",
+      confirmPassword: "",
+    });
+  } catch (error) {
+    toast.error(error || "Failed to change password");
+  } finally {
+    setChangingPassword(false);
+  }
+};
+
+
 
   if (!user) {
     return (
@@ -122,7 +143,7 @@ const UserProfile = () => {
   }
 
   return (
-      <div className="flex flex-col min-h-screen bg-black text-white">
+    <div className="flex flex-col min-h-screen bg-black text-white">
       <Navbar />
 
       <main className="flex-grow flex flex-col items-center p-6">
@@ -135,16 +156,14 @@ const UserProfile = () => {
         </button>
 
         <div className="bg-gray-900/70 backdrop-blur-lg border border-gray-800 rounded-3xl p-12 shadow-2xl max-w-5xl w-full">
-          {/* Header */}
           <div className="text-center mb-12">
             <h1 className="text-4xl font-extrabold bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent tracking-tight">
               My Profile
             </h1>
           </div>
 
-          {/* Profile Content */}
           <div className="grid md:grid-cols-2 gap-12">
-            {/* Left Column - Profile Picture */}
+            {/* Left Column */}
             <div className="text-center">
               <div className="relative inline-block mb-6">
                 {user.profile_pic ? (
@@ -177,7 +196,7 @@ const UserProfile = () => {
               </div>
             </div>
 
-            {/* Right Column - User Details */}
+            {/* Right Column */}
             <div className="space-y-8">
               <div className="bg-gray-800/50 rounded-2xl p-6 border border-gray-700">
                 <h3 className="text-xl font-semibold text-white mb-4 flex items-center">
@@ -244,24 +263,21 @@ const UserProfile = () => {
                 </div>
               </div>
 
-              {/* Action Buttons */}
-              <div className="space-y-4">
-                <button
-                  onClick={handleEditProfile}
-                  className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white py-4 px-6 rounded-xl font-semibold transition-all duration-200 flex items-center justify-center space-x-2"
-                >
-                  <FaEdit />
-                  <span>Edit Profile</span>
-                </button>
+              <button
+                onClick={handleEditProfile}
+                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white py-4 px-6 rounded-xl font-semibold transition-all duration-200 flex items-center justify-center space-x-2"
+              >
+                <FaEdit />
+                <span>Edit Profile</span>
+              </button>
 
-                <button
-                  onClick={() => setShowPasswordModal(true)}
-                  className="w-full bg-gray-700 hover:bg-gray-600 text-white py-4 px-6 rounded-xl font-semibold transition-all duration-200 flex items-center justify-center space-x-2"
-                >
-                  <FaLock />
-                  <span>Change Password</span>
-                </button>
-              </div>
+              <button
+                onClick={() => setShowPasswordModal(true)}
+                className="w-full bg-gray-700 hover:bg-gray-600 text-white py-4 px-6 rounded-xl font-semibold transition-all duration-200 flex items-center justify-center space-x-2"
+              >
+                <FaLock />
+                <span>Change Password</span>
+              </button>
             </div>
           </div>
         </div>
@@ -274,9 +290,8 @@ const UserProfile = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-gray-900 rounded-2xl p-8 max-w-md w-full border border-gray-700">
             <h3 className="text-2xl font-bold text-white mb-6 text-center">Edit Profile</h3>
-            
+
             <div className="space-y-6">
-              {/* Profile Picture */}
               <div className="text-center">
                 <div className="relative inline-block mb-4">
                   {previewImage ? (
@@ -304,20 +319,23 @@ const UserProfile = () => {
                   accept="image/*"
                   className="hidden"
                 />
+                {imageLoading && (
+                  <div className="mt-2 flex justify-center text-purple-400">
+                    <FaSpinner className="animate-spin mr-2" /> Uploading...
+                  </div>
+                )}
               </div>
 
-              {/* Username */}
               <div>
                 <label className="block text-gray-300 mb-2">Username</label>
                 <input
                   type="text"
                   value={editData.username}
-                  onChange={(e) => setEditData(prev => ({ ...prev, username: e.target.value }))}
+                  onChange={(e) => setEditData((prev) => ({ ...prev, username: e.target.value }))}
                   className="w-full bg-gray-800 text-white p-3 rounded-lg border border-gray-700 focus:border-purple-500 focus:outline-none transition-all"
                 />
               </div>
 
-              {/* Email (Read Only) */}
               <div>
                 <label className="block text-gray-300 mb-2">Email (Cannot be changed)</label>
                 <input
@@ -328,14 +346,23 @@ const UserProfile = () => {
                 />
               </div>
 
-              {/* Action Buttons */}
               <div className="flex space-x-4">
                 <button
-                  onClick={handleUpdateProfile}
-                  className="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 px-4 rounded-lg font-semibold transition-all flex items-center justify-center space-x-2"
+                  onClick={handleUpdateUsername}
+                  disabled={usernameLoading}
+                  className="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 px-4 rounded-lg font-semibold transition-all flex items-center justify-center space-x-2 disabled:opacity-50"
                 >
-                  <FaCheck />
-                  <span>Save</span>
+                  {usernameLoading ? (
+                    <>
+                      <FaSpinner className="animate-spin" />
+                      <span>Saving...</span>
+                    </>
+                  ) : (
+                    <>
+                      <FaCheck />
+                      <span>Save</span>
+                    </>
+                  )}
                 </button>
                 <button
                   onClick={() => setShowEditModal(false)}
@@ -351,7 +378,7 @@ const UserProfile = () => {
       )}
 
       {/* Change Password Modal */}
-      {showPasswordModal && (
+       {showPasswordModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-gray-900 rounded-2xl p-8 max-w-md w-full border border-gray-700">
             <h3 className="text-2xl font-bold text-white mb-6 text-center">Change Password</h3>
@@ -421,10 +448,39 @@ const UserProfile = () => {
               <div className="flex space-x-4">
                 <button
                   onClick={handleChangePassword}
-                  className="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 px-4 rounded-lg font-semibold transition-all flex items-center justify-center space-x-2"
+                  disabled={changingPassword}
+                  className={`flex-1 bg-green-600 hover:bg-green-700 text-white py-3 px-4 rounded-lg font-semibold transition-all flex items-center justify-center space-x-2 ${changingPassword ? "opacity-70 cursor-not-allowed" : ""}`}
                 >
-                  <FaCheck />
-                  <span>Update</span>
+                  {changingPassword ? (
+                    <>
+                      <svg
+                        className="animate-spin h-5 w-5 text-white mr-2"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8v8H4z"
+                        ></path>
+                      </svg>
+                      Updating...
+                    </>
+                  ) : (
+                    <>
+                      <FaCheck />
+                      <span>Update</span>
+                    </>
+                  )}
                 </button>
                 <button
                   onClick={() => {
