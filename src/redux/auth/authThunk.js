@@ -7,7 +7,6 @@ const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 export const uploadToCloudinary = async (file) => {
   console.log("📁 Selected file to upload:", file);
 
-
   const sigRes = await axios.get(`${BASE_URL}auth/generate-signature`);
   const { signature, timestamp } = sigRes.data;
 
@@ -27,10 +26,14 @@ export const uploadToCloudinary = async (file) => {
 
     console.log("🌥️ Cloudinary upload response:", uploadRes.data);
 
-    return uploadRes.data.secure_url;
+    // Return both URL and public_id
+    return {
+      url: uploadRes.data.secure_url,
+      publicId: uploadRes.data.public_id,
+    };
   } catch (error) {
     console.error("❌ Cloudinary upload failed:", error.response?.data || error.message);
-    return "";
+    return { url: "", publicId: "" };
   }
 };
 

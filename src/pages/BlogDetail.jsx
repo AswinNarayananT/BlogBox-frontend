@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { FaArrowLeft, FaTrash } from "react-icons/fa";
 import { toast } from "react-hot-toast";
 import {
+  fetchBlogDetail,
   markBlogAsSeen,
   deleteBlog,
 } from "../redux/blog/blogThunk";
@@ -19,11 +20,8 @@ export default function BlogDetail() {
   const { id } = useParams();
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const blog = useSelector((state) =>
-    state.blogs.items.find((item) => item.id === parseInt(id))
-  );
+  const blog = useSelector((state) => state.blogs.selectedBlog);
   const user = useSelector((state) => state.auth.user);
-  const comments = useSelector((state) => state.blogs.comments);
 
   const [showImagePreview, setShowImagePreview] = useState(false);
   const [showAttachmentPreview, setShowAttachmentPreview] = useState(false);
@@ -31,12 +29,18 @@ export default function BlogDetail() {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
+  
+  useEffect(() => {
+  dispatch(fetchBlogDetail(id));
+  }, [dispatch, id]);
 
   useEffect(() => {
     if (blog && (!blog.interaction || !blog.interaction.seen)) {
       dispatch(markBlogAsSeen(blog.id));
     }
   }, [blog, dispatch]);
+
+
 
   if (!blog) {
     return <BlogLoader />;
@@ -85,7 +89,6 @@ export default function BlogDetail() {
           {/* Content */}
           <BlogContentSection
             blog={blog}
-            comments={comments}
             setShowImagePreview={setShowImagePreview}
             setShowAttachmentPreview={setShowAttachmentPreview}
           />

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { FaComments, FaEdit, FaTrash, FaCheck, FaTimes } from "react-icons/fa";
 import {
-  fetchComments,
+  fetchBlogComments,
   createComment,
   toggleCommentApproval,
   updateComment,
@@ -16,19 +16,19 @@ const CommentsSection = () => {
   const dispatch = useDispatch();
 
   const user = useSelector((state) => state.auth.user);
-  const comments = useSelector((state) => state.blogs.comments);
-  console.log(user)
-  console.log(comments)
+  const comments = useSelector((state) => state.blogs.selectedComments);
+  const commentsLoading = useSelector((state) => state.blogs.selectedCommentsLoading);
+  const commentsError = useSelector((state) => state.blogs.selectedCommentsError);
 
   const [newComment, setNewComment] = useState("");
   const [editingCommentId, setEditingCommentId] = useState(null);
   const [editingContent, setEditingContent] = useState("");
 
   useEffect(() => {
-    if (user && id) {
-      dispatch(fetchComments(id));
+    if (id) {
+      dispatch(fetchBlogComments({ blogId: id }));
     }
-  }, [id, user, dispatch]);
+  }, [id, dispatch]);
 
   const handleToggleApproval = (commentId) => {
     if (!user?.is_superuser) {
@@ -86,12 +86,17 @@ const CommentsSection = () => {
     setEditingContent("");
   };
 
+  if (commentsLoading) {
+    return <p className="text-center text-gray-400 py-10">Loading comments...</p>;
+  }
+
+  if (commentsError) {
+    return <p className="text-center text-red-500 py-10">Failed to load comments</p>;
+  }
+
   return (
     <div className="max-w-6xl mx-auto px-6 py-20">
       <div className="bg-gray-900/70 backdrop-blur-lg border border-gray-800 rounded-3xl p-12 shadow-2xl transition-all">
-        <h2 className="text-4xl font-extrabold mb-10 text-center bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent tracking-tight">
-          Comments ({comments.length})
-        </h2>
 
         {/* Add Comment */}
         <div className="mb-14 p-8 bg-gray-800/60 border border-gray-700 rounded-2xl shadow-inner">
@@ -156,8 +161,7 @@ const CommentsSection = () => {
                           })}
                         </span>
                       </div>
-                      
-                      {/* Action buttons for comment owner */}
+
                       {user?.id === comment.user?.id && (
                         <div className="flex items-center space-x-2">
                           <button
@@ -178,7 +182,6 @@ const CommentsSection = () => {
                       )}
                     </div>
 
-                    {/* Comment content */}
                     {editingCommentId === comment.id ? (
                       <div className="space-y-3">
                         <textarea
@@ -210,7 +213,6 @@ const CommentsSection = () => {
                       </p>
                     )}
 
-                    {/* Admin approval button */}
                     {user?.is_superuser && editingCommentId !== comment.id && (
                       <div className="mt-4">
                         <button

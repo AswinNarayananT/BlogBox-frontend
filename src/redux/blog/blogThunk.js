@@ -84,11 +84,59 @@ export const updateBlog = createAsyncThunk(
   }
 );
 
-export const deleteBlog = createAsyncThunk(
-  "blogs/markAsSeen",
+
+
+
+export const fetchBlogDetail = createAsyncThunk(
+  "blogs/fetchBlogDetail",
   async (blogId, { rejectWithValue }) => {
     try {
-        console.log("jdslkj")
+      console.log("📄 Fetching blog detail:", blogId);
+      const res = await api.get(`/blogs/${blogId}`);
+      console.log("✅ Fetched blog detail:", res.data);
+      return res.data;
+    } catch (err) {
+      console.log("❌ Failed to fetch blog detail:", JSON.stringify(err, Object.getOwnPropertyNames(err)));
+      return rejectWithValue("Failed to fetch blog detail — see console for details.");
+    }
+  }
+);
+
+
+export const fetchBlogComments = createAsyncThunk(
+  "blogs/fetchComments",
+  async ({ blogId, skip = 0, limit = 10 }, { rejectWithValue }) => {
+    try {
+      const res = await api.get(`/blogs/${blogId}/comments?skip=${skip}&limit=${limit}`);
+      return { comments: res.data, skip }; 
+    } catch (err) {
+      return rejectWithValue("Failed to fetch comments");
+    }
+  }
+);
+
+
+export const fetchBlogAttachments = createAsyncThunk(
+  "blogs/fetchAttachments",
+  async (blogId, { rejectWithValue }) => {
+    try {
+      console.log("📄 Fetching attachments for blog:", blogId);
+      const res = await api.get(`/attachments/blog/${blogId}`);
+      console.log("✅ Fetched attachments:", res.data);
+      return res.data;
+    } catch (err) {
+      console.log("❌ Failed to fetch attachments:", JSON.stringify(err, Object.getOwnPropertyNames(err)));
+      return rejectWithValue("Failed to fetch attachments — see console for details.");
+    }
+  }
+);
+
+export const deleteBlog = createAsyncThunk(
+  "blogs/deleteBlog",
+  async (blogId, { rejectWithValue }) => {
+    try {
+        const res = await api.delete(`/blogs/${blogId}`);
+        return res.data
     } catch (err) {
       console.log("❌ Full Axios error:", JSON.stringify(err, Object.getOwnPropertyNames(err)));
       return rejectWithValue("Network error — check console & backend server.");
@@ -142,22 +190,6 @@ export const unlikeBlog = createAsyncThunk(
 );
 
 
-export const fetchComments = createAsyncThunk(
-  "blogs/fetchComments",
-  async (blogId, { rejectWithValue }) => {
-    try {
-      console.log("📄 Fetching comments for blog:", blogId);
-      const res = await api.get(`/blogs/${blogId}/comments`);
-      console.log("✅ Fetched comments:", res.data);
-      return res.data;
-    } catch (err) {
-      console.log("❌ Failed to fetch comments:", JSON.stringify(err, Object.getOwnPropertyNames(err)));
-      return rejectWithValue("Failed to fetch comments — see console for details.");
-    }
-  }
-);
-
-
 export const createComment = createAsyncThunk(
   "blogs/createComment",
   async ({ blogId, content }, { rejectWithValue }) => {
@@ -187,24 +219,64 @@ export const toggleCommentApproval = createAsyncThunk(
 
 
 export const deleteComment = createAsyncThunk(
-  "blogs/toggleCommentApproval",
+  "blogs/deleteComment",
   async (commentId, { rejectWithValue }) => {
     try {
-  
-      return res.data;
+      const res = await api.delete(`/blogs/comments/${commentId}`);
+      return res.data; // returns the deleted comment object or just id depending on your backend
     } catch (err) {
-      return rejectWithValue(err.response?.data?.detail || "Failed to toggle approval");
+      return rejectWithValue(err.response?.data?.detail || "Failed to delete comment");
     }
   }
 );
 
 export const updateComment = createAsyncThunk(
-  "blogs/toggleCommentApproval",
-  async (commentId, { rejectWithValue }) => {
+  "blogs/updateComment",
+  async ({ commentId, content }, { rejectWithValue }) => {
+    try {
+      const res = await api.patch(`/blogs/comments/${commentId}`, { content });
+      return res.data; // returns updated comment object
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.detail || "Failed to update comment");
+    }
+  }
+);
+
+
+export const createBlogAttachment = createAsyncThunk(
+  "blogs/createAttachment",
+  async ({ blogId, file }, { rejectWithValue }) => {
     try {
 
+      const { url, publicId } = await uploadToCloudinary(file);
+
+      if (!url || !publicId) {
+        throw new Error("Cloudinary upload failed");
+      }
+
+      const res = await api.post(`/attachments/blog/${blogId}`, {
+        file_url: url,
+        file_public_id: publicId,
+      });
+
+      console.log("✅ Attachment created in backend:", res.data);
+      return res.data;
     } catch (err) {
-      return rejectWithValue(err.response?.data?.detail || "Failed to toggle approval");
+      console.error("❌ Failed to create attachment:", err);
+      return rejectWithValue("Failed to create attachment");
+    }
+  }
+);
+
+export const deleteAttachment = createAsyncThunk(
+  "blogs/deleteAttachment",
+  async (attachmentId, { rejectWithValue }) => {
+    try {
+      await api.delete(`/attachments/${attachmentId}`);
+      // Return the ID so reducer can remove it
+      return attachmentId;
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.detail || "Failed to delete attachment");
     }
   }
 );

@@ -22,15 +22,16 @@ import { useDispatch, useSelector } from "react-redux";
 import { updateBlog, likeBlog, unlikeBlog } from "../redux/blog/blogThunk";
 import { toast } from "react-hot-toast";
 import BlogLoader from "./BlogLoader";
+import AttachmentGrid from "./AttachmentGrid";
 
 export default function BlogContentSection({
   blog,
-  comments,
   setShowImagePreview,
   setShowAttachmentPreview,
 }) {
   const dispatch = useDispatch();
   const user = useSelector((state) => state.auth.user);
+  const selectedComments = useSelector((state) => state.blogs.selectedComments);
 
   const imageInputRef = useRef();
   const attachInputRef = useRef();
@@ -244,10 +245,11 @@ export default function BlogContentSection({
           <FaEye className="mr-2" />
           {blog.read_count} reads
         </div>
-        <div className="flex items-center">
-          <FaComments className="mr-2" />
-          {comments.length} comments
-        </div>
+       <div className="flex items-center">
+        <FaComments className="mr-2" />
+        {selectedComments ? selectedComments.length : 0} comments
+      </div>
+
       </div>
 
       {/* Like and Share Buttons */}
@@ -325,80 +327,7 @@ export default function BlogContentSection({
       </div>
 
       {/* Attachment */}
-      {previewAttachment && (
-        <div className="mt-12 relative">
-          <div className="flex justify-center">
-            <div className="bg-gray-900/60 rounded-2xl p-6 border border-gray-700 shadow-lg max-w-sm">
-              {user?.is_superuser && (
-                <>
-                  <button
-                    onClick={() => attachInputRef.current.click()}
-                    className="absolute top-2 right-2 bg-gray-700/90 text-white p-2 rounded-full hover:bg-gray-800 transition-all duration-200 shadow-lg"
-                  >
-                    <FaEdit />
-                  </button>
-                  <input
-                    type="file"
-                    ref={attachInputRef}
-                    onChange={handleAttachmentSelect}
-                    className="hidden"
-                  />
-                </>
-              )}
-              
-              <div className="text-center">
-                {attachmentType === "image" ? (
-                  <div className="cursor-pointer" onClick={() => setShowImagePreview(true)}>
-                    <div className="w-20 h-20 mx-auto mb-3 bg-purple-600 rounded-lg flex items-center justify-center">
-                      <FaFileImage className="text-white text-2xl" />
-                    </div>
-                    <img
-                      src={previewAttachment}
-                      alt="Attachment preview"
-                      className="w-full h-24 object-cover rounded-lg mb-3"
-                    />
-                    <p className="text-gray-300 text-sm font-medium">Image Attachment</p>
-                    <p className="text-gray-500 text-xs">{getFileName(previewAttachment)}</p>
-                  </div>
-                ) : attachmentType === "pdf" ? (
-                  <div className="cursor-pointer" onClick={() => setShowAttachmentPreview(true)}>
-                    <div className="w-20 h-20 mx-auto mb-3 bg-red-600 rounded-lg flex items-center justify-center">
-                      <FaFilePdf className="text-white text-2xl" />
-                    </div>
-                    <p className="text-gray-300 text-sm font-medium">PDF Document</p>
-                    <p className="text-gray-500 text-xs">{getFileName(previewAttachment)}</p>
-                  </div>
-                ) : (
-                  <div className="cursor-pointer" onClick={() => setShowAttachmentPreview(true)}>
-                    <div className="w-20 h-20 mx-auto mb-3 bg-gray-600 rounded-lg flex items-center justify-center">
-                      <FaFile className="text-white text-2xl" />
-                    </div>
-                    <p className="text-gray-300 text-sm font-medium">File Attachment</p>
-                    <p className="text-gray-500 text-xs">{getFileName(previewAttachment)}</p>
-                  </div>
-                )}
-                
-                <div className="flex justify-center gap-2 mt-4">
-                  <button
-                    onClick={() => setShowAttachmentPreview(true)}
-                    className="bg-purple-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-purple-700 transition-colors"
-                  >
-                    Preview
-                  </button>
-                  <a
-                    href={previewAttachment}
-                    download
-                    className="bg-gray-700 text-white px-4 py-2 rounded-lg text-sm hover:bg-gray-800 transition-colors flex items-center"
-                  >
-                    <FaDownload className="mr-1" />
-                    Download
-                  </a>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <AttachmentGrid />
     </div>
   );
 }
