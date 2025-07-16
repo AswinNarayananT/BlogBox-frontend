@@ -2,21 +2,15 @@ import React, { useRef, useState } from "react";
 import {
   FaCalendarAlt,
   FaEye,
-  FaHeart,
-  FaHeartBroken,
   FaComments,
   FaEdit,
-  FaDownload,
-  FaFileAlt,
-  FaFilePdf,
-  FaFile,
   FaCheck,
   FaTimes,
   FaPlus,
   FaShare,
   FaThumbsUp,
   FaThumbsDown,
-  FaFileImage,
+  FaSpinner ,
 } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
 import { updateBlog, likeBlog, unlikeBlog } from "../redux/blog/blogThunk";
@@ -27,35 +21,21 @@ import AttachmentGrid from "./AttachmentGrid";
 export default function BlogContentSection({
   blog,
   setShowImagePreview,
-  setShowAttachmentPreview,
 }) {
   const dispatch = useDispatch();
   const user = useSelector((state) => state.auth.user);
   const selectedComments = useSelector((state) => state.blogs.selectedComments);
 
   const imageInputRef = useRef();
-  const attachInputRef = useRef();
 
   const [editingTitle, setEditingTitle] = useState(false);
   const [editingContent, setEditingContent] = useState(false);
   const [title, setTitle] = useState(blog.title);
   const [content, setContent] = useState(blog.content);
   const [previewImage, setPreviewImage] = useState(blog.image);
-  const [previewAttachment, setPreviewAttachment] = useState(blog.attachment);
+  const [imageLoading, setImageLoading] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const getFileType = (url) => {
-    if (!url) return "unknown";
-    const ext = url.split(".").pop().toLowerCase();
-    if (["jpg", "jpeg", "png", "gif", "webp"].includes(ext)) return "image";
-    if (["pdf"].includes(ext)) return "pdf";
-    return "file";
-  };
-
-  const getFileName = (url) => {
-    if (!url) return "Unknown file";
-    return url.split("/").pop() || "Unknown file";
-  };
 
   const handleUpdate = async (field, value) => {
     if (!user?.is_superuser) {
@@ -75,49 +55,35 @@ export default function BlogContentSection({
     }
   };
 
-  const handleImageSelect = (e) => {
-    if (!user?.is_superuser) {
-      toast.error("Only superusers can update the image.");
-      return;
-    }
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        setPreviewImage(reader.result);
-      };
-      reader.readAsDataURL(file);
+const handleImageSelect = (e) => {
+  if (!user?.is_superuser) {
+    toast.error("Only superusers can update the image.");
+    return;
+  }
 
-      setLoading(true);
-      dispatch(updateBlog({ blogId: blog.id, data: { image: file } }))
-        .unwrap()
-        .then(() => toast.success("Image updated successfully!"))
-        .catch(() => toast.error("Failed to update image"))
-        .finally(() => setLoading(false));
-    }
-  };
+  const file = e.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = () => {
+      setPreviewImage(reader.result);
+    };
+    reader.readAsDataURL(file);
 
-  const handleAttachmentSelect = (e) => {
-    if (!user?.is_superuser) {
-      toast.error("Only superusers can update the attachment.");
-      return;
-    }
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        setPreviewAttachment(reader.result);
-      };
-      reader.readAsDataURL(file);
+    setImageLoading(true);
 
-      setLoading(true);
-      dispatch(updateBlog({ blogId: blog.id, data: { attachment: file } }))
-        .unwrap()
-        .then(() => toast.success("Attachment updated successfully!"))
-        .catch(() => toast.error("Failed to update attachment"))
-        .finally(() => setLoading(false));
-    }
-  };
+    dispatch(updateBlog({ blogId: blog.id, data: { image: file } }))
+      .unwrap()
+      .then(() => {
+        toast.success("Image updated successfully!");
+      })
+      .catch(() => {
+        toast.error("Failed to update image");
+        setPreviewImage(null);
+      })
+      .finally(() => setImageLoading(false));
+  }
+};
+
 
   const handleLike = async () => {
     try {
@@ -152,7 +118,6 @@ export default function BlogContentSection({
     }
   };
 
-  const attachmentType = getFileType(previewAttachment);
 
   if (loading) {
     return <BlogLoader />;
@@ -202,8 +167,8 @@ export default function BlogContentSection({
         )}
       </div>
 
-      {/* Image */}
-     {previewImage ? (
+{/* Image */}
+{previewImage ? (
   <div className="relative mb-8">
     <img
       src={previewImage}
@@ -211,6 +176,14 @@ export default function BlogContentSection({
       className="w-full h-[450px] object-cover rounded-2xl cursor-pointer shadow-lg"
       onClick={() => setShowImagePreview(true)}
     />
+
+    {/* Loader overlay only for image */}
+    {imageLoading && (
+      <div className="absolute inset-0 bg-black/60 flex items-center justify-center rounded-2xl">
+        <FaSpinner className="animate-spin text-white text-3xl" />
+      </div>
+    )}
+
     {user?.is_superuser && (
       <>
         <button

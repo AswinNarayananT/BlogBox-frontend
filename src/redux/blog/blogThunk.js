@@ -24,18 +24,21 @@ export const createBlog = createAsyncThunk(
       let imageUrl = "";
 
       if (blogData.image && typeof blogData.image !== "string") {
-        imageUrl = await uploadToCloudinary(blogData.image);
+        const uploadRes = await uploadToCloudinary(blogData.image);
+        imageUrl = uploadRes.url;
       } else if (typeof blogData.image === "string") {
         imageUrl = blogData.image;
       }
 
+      // Construct payload explicitly
       const payload = {
-        ...blogData,
+        title: blogData.title,
+        content: blogData.content,
         image: imageUrl || null,
+        is_published: blogData.is_published,
       };
 
       const res = await api.post("/blogs/", payload);
-
       return res.data;
     } catch (err) {
       return rejectWithValue(err.response?.data?.detail || "Failed to create blog");
@@ -49,10 +52,10 @@ export const updateBlog = createAsyncThunk(
     try {
       let payload = { ...data };
 
-      if (data.image && typeof data.image !== "string") {
-        const imageUrl = await uploadToCloudinary(data.image);
-        if (!imageUrl) return rejectWithValue("Image upload failed");
-        payload.image = imageUrl;
+       if (data.image && typeof data.image !== "string") {
+        const uploadRes = await uploadToCloudinary(data.image);
+        if (!uploadRes.url) return rejectWithValue("Image upload failed");
+        payload.image = uploadRes.url; 
       }
 
       if (!("image" in data)) {

@@ -15,6 +15,14 @@ import BlogContentSection from "../components/BlogContentSection";
 import BlogLoader from "../components/BlogLoader";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  Button,
+} from "@mui/material";
 
 export default function BlogDetail() {
   const { id } = useParams();
@@ -26,12 +34,15 @@ export default function BlogDetail() {
   const [showImagePreview, setShowImagePreview] = useState(false);
   const [showAttachmentPreview, setShowAttachmentPreview] = useState(false);
 
+  // Modal state
+  const [openDeleteModal, setOpenDeleteModal] = useState(false);
+
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
-  
+
   useEffect(() => {
-  dispatch(fetchBlogDetail(id));
+    dispatch(fetchBlogDetail(id));
   }, [dispatch, id]);
 
   useEffect(() => {
@@ -40,22 +51,19 @@ export default function BlogDetail() {
     }
   }, [blog, dispatch]);
 
-
-
   if (!blog) {
     return <BlogLoader />;
   }
 
-  const handleDelete = () => {
-    if (window.confirm("Are you sure you want to delete this blog?")) {
-      dispatch(deleteBlog(blog.id))
-        .unwrap()
-        .then(() => {
-          toast.success("Blog deleted successfully!");
-          navigate("/");
-        })
-        .catch(() => toast.error("Failed to delete"));
-    }
+  const handleDeleteConfirmed = () => {
+    dispatch(deleteBlog(blog.id))
+      .unwrap()
+      .then(() => {
+        toast.success("Blog deleted successfully!");
+        navigate("/");
+      })
+      .catch(() => toast.error("Failed to delete"));
+    setOpenDeleteModal(false);
   };
 
   return (
@@ -71,13 +79,13 @@ export default function BlogDetail() {
           Back to Blogs
         </button>
 
-        <div className="w-full max-w-6xl bg-black backdrop-blur-lg  rounded-3xl p-12 shadow-2xl">
+        <div className="w-full max-w-6xl bg-black backdrop-blur-lg rounded-3xl p-12 shadow-2xl">
           {/* Header actions */}
           <div className="flex flex-wrap justify-between items-center mb-14">
             <div></div>
             {user?.is_superuser && (
               <button
-                onClick={handleDelete}
+                onClick={() => setOpenDeleteModal(true)}
                 className="flex items-center bg-gradient-to-r from-red-600 to-red-800 text-white px-7 py-3 rounded-full hover:from-red-700 hover:to-red-900 transition shadow-lg"
               >
                 <FaTrash className="mr-2" />
@@ -109,6 +117,27 @@ export default function BlogDetail() {
         onClose={() => setShowAttachmentPreview(false)}
         attachmentUrl={blog.attachment}
       />
+
+      {/* Delete confirmation modal */}
+      <Dialog
+        open={openDeleteModal}
+        onClose={() => setOpenDeleteModal(false)}
+      >
+        <DialogTitle>Delete Blog</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to delete this blog? This action cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenDeleteModal(false)} color="primary">
+            Cancel
+          </Button>
+          <Button onClick={handleDeleteConfirmed} color="error">
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       <Footer />
     </div>

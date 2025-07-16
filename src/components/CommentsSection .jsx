@@ -10,6 +10,14 @@ import {
 } from "../redux/blog/blogThunk";
 import { toast } from "react-hot-toast";
 import { useParams } from "react-router-dom";
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  Button,
+} from "@mui/material";
 
 const CommentsSection = () => {
   const { id } = useParams();
@@ -23,6 +31,10 @@ const CommentsSection = () => {
   const [newComment, setNewComment] = useState("");
   const [editingCommentId, setEditingCommentId] = useState(null);
   const [editingContent, setEditingContent] = useState("");
+
+  // Modal state
+  const [openDeleteModal, setOpenDeleteModal] = useState(false);
+  const [commentToDelete, setCommentToDelete] = useState(null);
 
   useEffect(() => {
     if (id) {
@@ -48,6 +60,7 @@ const CommentsSection = () => {
       .then(() => {
         setNewComment("");
         toast.success("Comment added successfully!");
+        dispatch(fetchBlogComments({ blogId: id })); // ✅ Reload only the comments
       })
       .catch(() => toast.error("Failed to add comment"));
   };
@@ -68,22 +81,40 @@ const CommentsSection = () => {
         setEditingCommentId(null);
         setEditingContent("");
         toast.success("Comment updated successfully!");
+        dispatch(fetchBlogComments({ blogId: id })); // ✅ Reload only comments
       })
       .catch(() => toast.error("Failed to update comment"));
-  };
-
-  const handleDeleteComment = (commentId) => {
-    if (window.confirm("Are you sure you want to delete this comment?")) {
-      dispatch(deleteComment(commentId))
-        .unwrap()
-        .then(() => toast.success("Comment deleted successfully!"))
-        .catch(() => toast.error("Failed to delete comment"));
-    }
   };
 
   const handleCancelEdit = () => {
     setEditingCommentId(null);
     setEditingContent("");
+  };
+
+  const confirmDeleteComment = (commentId) => {
+    setCommentToDelete(commentId);
+    setOpenDeleteModal(true);
+  };
+
+  const handleDeleteConfirmed = () => {
+    if (commentToDelete) {
+      dispatch(deleteComment(commentToDelete))
+        .unwrap()
+        .then(() => {
+          toast.success("Comment deleted successfully!");
+          dispatch(fetchBlogComments({ blogId: id })); // ✅ Reload only comments
+        })
+        .catch(() => toast.error("Failed to delete comment"))
+        .finally(() => {
+          setOpenDeleteModal(false);
+          setCommentToDelete(null);
+        });
+    }
+  };
+
+  const handleDeleteCancel = () => {
+    setOpenDeleteModal(false);
+    setCommentToDelete(null);
   };
 
   if (commentsLoading) {
@@ -172,7 +203,7 @@ const CommentsSection = () => {
                             <FaEdit className="text-sm" />
                           </button>
                           <button
-                            onClick={() => handleDeleteComment(comment.id)}
+                            onClick={() => confirmDeleteComment(comment.id)}
                             className="text-gray-400 hover:text-red-400 p-1 rounded transition-colors"
                             title="Delete comment"
                           >
@@ -234,6 +265,24 @@ const CommentsSection = () => {
           </div>
         )}
       </div>
+
+      {/* Confirmation Modal */}
+      <Dialog open={openDeleteModal} onClose={handleDeleteCancel}>
+        <DialogTitle>Delete Comment</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to delete this comment? This action cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleDeleteCancel} color="primary">
+            Cancel
+          </Button>
+          <Button onClick={handleDeleteConfirmed} color="error">
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 };

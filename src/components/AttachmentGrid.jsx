@@ -15,6 +15,14 @@ import {
   deleteAttachment,
 } from "../redux/blog/blogThunk";
 import { useParams } from "react-router-dom";
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
+  Button,
+} from "@mui/material";
 
 const AttachmentGrid = () => {
   const { id } = useParams();
@@ -27,8 +35,11 @@ const AttachmentGrid = () => {
   const attachInputRef = useRef(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [previewType, setPreviewType] = useState(null);
-  const [deletingAttachmentId, setDeletingAttachmentId] = useState(null);
 
+  // Modal state
+  const [openDeleteModal, setOpenDeleteModal] = useState(false);
+  const [attachmentToDelete, setAttachmentToDelete] = useState(null);
+  const [deletingAttachmentId, setDeletingAttachmentId] = useState(null);
 
   useEffect(() => {
     if (id) {
@@ -36,23 +47,27 @@ const AttachmentGrid = () => {
     }
   }, [id, dispatch]);
 
-  const handleDelete = (attId) => {
-  if (window.confirm("Are you sure you want to delete this attachment?")) {
-    setDeletingAttachmentId(attId);
+  const handleDeleteClick = (attId) => {
+    setAttachmentToDelete(attId);
+    setOpenDeleteModal(true);
+  };
 
-    dispatch(deleteAttachment(attId))
+  const handleDeleteConfirmed = () => {
+    setDeletingAttachmentId(attachmentToDelete);
+
+    dispatch(deleteAttachment(attachmentToDelete))
       .unwrap()
       .then(() => {
         toast.success("Attachment deleted!");
         setDeletingAttachmentId(null);
+        setOpenDeleteModal(false);
       })
       .catch(() => {
         toast.error("Failed to delete attachment");
         setDeletingAttachmentId(null);
+        setOpenDeleteModal(false);
       });
-  }
-};
-
+  };
 
   const handlePreview = (url, type) => {
     setPreviewUrl(url);
@@ -131,16 +146,16 @@ const AttachmentGrid = () => {
                 )}
               </div>
               {user?.is_superuser && (
-               <button
-                onClick={() => handleDelete(att.id)}
-                disabled={deletingAttachmentId === att.id}
-                className={`bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-full text-xs mt-2 ${
-                  deletingAttachmentId === att.id ? "opacity-50 cursor-not-allowed" : ""
-                }`}
-              >
-                <FaTrash className="inline mr-1" />
-                {deletingAttachmentId === att.id ? "Deleting..." : "Delete"}
-              </button>
+                <button
+                  onClick={() => handleDeleteClick(att.id)}
+                  disabled={deletingAttachmentId === att.id}
+                  className={`bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded-full text-xs mt-2 ${
+                    deletingAttachmentId === att.id ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
+                >
+                  <FaTrash className="inline mr-1" />
+                  {deletingAttachmentId === att.id ? "Deleting..." : "Delete"}
+                </button>
               )}
             </div>
           );
@@ -202,6 +217,27 @@ const AttachmentGrid = () => {
           </div>
         </div>
       )}
+
+      {/* Delete confirmation modal */}
+      <Dialog
+        open={openDeleteModal}
+        onClose={() => setOpenDeleteModal(false)}
+      >
+        <DialogTitle>Delete Attachment</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to delete this attachment? This action cannot be undone.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenDeleteModal(false)} color="primary">
+            Cancel
+          </Button>
+          <Button onClick={handleDeleteConfirmed} color="error">
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </>
   );
 };

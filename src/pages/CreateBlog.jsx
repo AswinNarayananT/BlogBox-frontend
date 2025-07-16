@@ -26,18 +26,18 @@ export default function CreateBlog() {
     content: Yup.string().required("Content is required"),
   });
 
-  const handleSubmit = async (values, { setSubmitting, resetForm }) => {
-    try {
-      await dispatch(createBlog(values)).unwrap();
-      toast.success("Blog created successfully!");
-      resetForm();
-      navigate("/");
-    } catch (error) {
-      toast.error(error || "Failed to create blog");
-    } finally {
-      setSubmitting(false);
-    }
-  };
+ const handleSubmit = async (values, { setSubmitting, resetForm }) => {
+  try {
+    await dispatch(createBlog(values)).unwrap();
+    toast.success("Blog created successfully!");
+    resetForm();
+    navigate("/");
+  } catch (error) {
+    toast.error(typeof error === "string" ? error : "Failed to create blog");
+  } finally {
+    setSubmitting(false);
+  }
+};
 
   return (
     <>
