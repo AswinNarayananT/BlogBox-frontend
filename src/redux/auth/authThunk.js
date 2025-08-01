@@ -24,9 +24,6 @@ export const uploadToCloudinary = async (file) => {
       formData
     );
 
-    console.log("🌥️ Cloudinary upload response:", uploadRes.data);
-
-    // Return both URL and public_id
     return {
       url: uploadRes.data.secure_url,
       publicId: uploadRes.data.public_id,
@@ -48,8 +45,13 @@ export const register = createAsyncThunk(
         password: formData.password,
       };
 
-      const res = await axios.post(`${BASE_URL}auth/register`, payload);
-      return res.data;
+      const res = await axios.post(`${BASE_URL}auth/register`, payload, {
+        withCredentials: true,
+      });
+
+      localStorage.setItem("access_token", res.data.access_token);
+
+      return res.data.user;
     } catch (err) {
       console.error("Registration error:", err);
       let message = "Registration failed";
@@ -71,7 +73,7 @@ export const login = createAsyncThunk(
       const res = await axios.post(
         `${BASE_URL}auth/login`,
         { email, password },
-        { withCredentials: true }  
+        { withCredentials: true }
       );
 
       localStorage.setItem("access_token", res.data.access_token);
@@ -79,6 +81,24 @@ export const login = createAsyncThunk(
       return res.data.user;
     } catch (err) {
       return rejectWithValue(err.response?.data?.detail || "Login failed");
+    }
+  }
+);
+
+
+export const getCurrentUser = createAsyncThunk(
+  "auth/getCurrentUser",
+  async (_, { rejectWithValue }) => {
+      try {
+        const res = await api.get("/auth/me");
+      const user = res.data.user;
+
+      if (!user || user.is_active === false) {
+        return rejectWithValue("Your account is inactive.");
+      }
+      return user; 
+    } catch (err) {
+      return rejectWithValue(err.response?.data?.detail || "Failed to fetch user");
     }
   }
 );
@@ -132,7 +152,7 @@ export const logout = createAsyncThunk(
   "auth/logout",
   async (_, { rejectWithValue }) => {
     try {
-      await axios.post(`${BASE_URL}auth/logout`);
+      await api.post("/auth/logout");
 
       localStorage.removeItem("access_token");
 

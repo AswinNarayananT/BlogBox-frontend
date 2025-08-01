@@ -1,12 +1,13 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { useEffect, useState } from "react";
-import { FaArrowLeft, FaTrash } from "react-icons/fa";
+import { FaArrowLeft, FaTrash, FaBan } from "react-icons/fa";
 import { toast } from "react-hot-toast";
 import {
   fetchBlogDetail,
   markBlogAsSeen,
   deleteBlog,
+  blockBlog,
 } from "../redux/blog/blogThunk";
 import AttachmentPreviewModal from "../components/AttachmentPreviewModal ";
 import ImagePreviewModal from "../components/ImagePreviewModal ";
@@ -34,8 +35,13 @@ export default function BlogDetail() {
   const [showImagePreview, setShowImagePreview] = useState(false);
   const [showAttachmentPreview, setShowAttachmentPreview] = useState(false);
 
-  // Modal state
+  // Modal states
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
+  const [openBlockModal, setOpenBlockModal] = useState(false);
+
+  // Check permissions
+  const isAuthor = user?.id === blog?.author_id;
+  const isAdmin = user?.is_superuser;
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -66,6 +72,17 @@ export default function BlogDetail() {
     setOpenDeleteModal(false);
   };
 
+  const handleBlockConfirmed = () => {
+    dispatch(blockBlog(blog.id))
+      .unwrap()
+      .then(() => {
+        toast.success("Blog blocked successfully!");
+        navigate("/");
+      })
+      .catch(() => toast.error("Failed to block blog"));
+    setOpenBlockModal(false);
+  };
+
   return (
     <div className="flex flex-col min-h-screen bg-black text-white">
       <Navbar />
@@ -83,14 +100,32 @@ export default function BlogDetail() {
           {/* Header actions */}
           <div className="flex flex-wrap justify-between items-center mb-14">
             <div></div>
-            {user?.is_superuser && (
-              <button
-                onClick={() => setOpenDeleteModal(true)}
-                className="flex items-center bg-gradient-to-r from-red-600 to-red-800 text-white px-7 py-3 rounded-full hover:from-red-700 hover:to-red-900 transition shadow-lg"
-              >
-                <FaTrash className="mr-2" />
-                Delete
-              </button>
+            
+            {/* Action Buttons - Show based on user role */}
+            {(isAuthor || isAdmin) && (
+              <div className="flex gap-3">
+                {/* Delete button - Only for authors */}
+                {isAuthor && (
+                  <button
+                    onClick={() => setOpenDeleteModal(true)}
+                    className="flex items-center bg-gradient-to-r from-red-600 to-red-800 text-white px-7 py-3 rounded-full hover:from-red-700 hover:to-red-900 transition shadow-lg"
+                  >
+                    <FaTrash className="mr-2" />
+                    Delete
+                  </button>
+                )}
+                
+                {/* Block button - Only for admins */}
+                {isAdmin && (
+                  <button
+                    onClick={() => setOpenBlockModal(true)}
+                    className="flex items-center bg-gradient-to-r from-orange-600 to-orange-800 text-white px-7 py-3 rounded-full hover:from-orange-700 hover:to-orange-900 transition shadow-lg"
+                  >
+                    <FaBan className="mr-2" />
+                    Block
+                  </button>
+                )}
+              </div>
             )}
           </div>
 
@@ -135,6 +170,27 @@ export default function BlogDetail() {
           </Button>
           <Button onClick={handleDeleteConfirmed} color="error">
             Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Block confirmation modal */}
+      <Dialog
+        open={openBlockModal}
+        onClose={() => setOpenBlockModal(false)}
+      >
+        <DialogTitle>Block Blog</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            Are you sure you want to block this blog? This will make it unavailable to users.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenBlockModal(false)} color="primary">
+            Cancel
+          </Button>
+          <Button onClick={handleBlockConfirmed} color="warning">
+            Block
           </Button>
         </DialogActions>
       </Dialog>

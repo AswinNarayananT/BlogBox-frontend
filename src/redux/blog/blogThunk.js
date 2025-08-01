@@ -4,14 +4,24 @@ import { uploadToCloudinary } from "../auth/authThunk";
 
 export const fetchBlogs = createAsyncThunk(
   "blogs/fetchBlogs",
-  async ({ page = 1, pageSize = 5 }, { rejectWithValue }) => {
+  async ({ page = 1, pageSize = 10 }, { rejectWithValue }) => {
     try {
       const res = await api.get(`/blogs/?page=${page}&page_size=${pageSize}`);
-      console.log("Fetched blogs:", res.data);
       return res.data;
     } catch (err) {
-      console.log("❌ Full Axios error:", JSON.stringify(err, Object.getOwnPropertyNames(err)));
       return rejectWithValue("Network error — check console & backend server.");
+    }
+  }
+);
+
+export const fetchMyBlogs = createAsyncThunk(
+  "blogs/fetchMyBlogs",
+  async ({ page = 1, page_size = 10 }, { rejectWithValue }) => {
+    try {
+      const response = await api.get(`blogs/myblogs/?page=${page}&page_size=${page_size}`);
+      return response.data; // contains { data, pagination }
+    } catch (error) {
+      return rejectWithValue(error.response?.data?.detail || "Failed to fetch your blogs");
     }
   }
 );
@@ -30,7 +40,6 @@ export const createBlog = createAsyncThunk(
         imageUrl = blogData.image;
       }
 
-      // Construct payload explicitly
       const payload = {
         title: blogData.title,
         content: blogData.content,
@@ -77,12 +86,9 @@ export const fetchBlogDetail = createAsyncThunk(
   "blogs/fetchBlogDetail",
   async (blogId, { rejectWithValue }) => {
     try {
-      console.log("📄 Fetching blog detail:", blogId);
       const res = await api.get(`/blogs/${blogId}`);
-      console.log("✅ Fetched blog detail:", res.data);
       return res.data;
     } catch (err) {
-      console.log("❌ Failed to fetch blog detail:", JSON.stringify(err, Object.getOwnPropertyNames(err)));
       return rejectWithValue("Failed to fetch blog detail — see console for details.");
     }
   }
@@ -106,12 +112,9 @@ export const fetchBlogAttachments = createAsyncThunk(
   "blogs/fetchAttachments",
   async (blogId, { rejectWithValue }) => {
     try {
-      console.log("📄 Fetching attachments for blog:", blogId);
       const res = await api.get(`/attachments/blog/${blogId}`);
-      console.log("✅ Fetched attachments:", res.data);
       return res.data;
     } catch (err) {
-      console.log("❌ Failed to fetch attachments:", JSON.stringify(err, Object.getOwnPropertyNames(err)));
       return rejectWithValue("Failed to fetch attachments — see console for details.");
     }
   }
@@ -124,12 +127,16 @@ export const deleteBlog = createAsyncThunk(
         const res = await api.delete(`/blogs/${blogId}`);
         return res.data
     } catch (err) {
-      console.log("❌ Full Axios error:", JSON.stringify(err, Object.getOwnPropertyNames(err)));
       return rejectWithValue("Network error — check console & backend server.");
     }
   }
 );
 
+
+export const blockBlog = createAsyncThunk(
+  "blogs/deleteBlog",
+
+);
 
 export const markBlogAsSeen = createAsyncThunk(
   "blogs/markAsSeen",
@@ -209,7 +216,7 @@ export const deleteComment = createAsyncThunk(
   async (commentId, { rejectWithValue }) => {
     try {
       const res = await api.delete(`/blogs/comments/${commentId}`);
-      return res.data; // returns the deleted comment object or just id depending on your backend
+      return res.data;
     } catch (err) {
       return rejectWithValue(err.response?.data?.detail || "Failed to delete comment");
     }
@@ -221,7 +228,7 @@ export const updateComment = createAsyncThunk(
   async ({ commentId, content }, { rejectWithValue }) => {
     try {
       const res = await api.patch(`/blogs/comments/${commentId}`, { content });
-      return res.data; // returns updated comment object
+      return res.data;
     } catch (err) {
       return rejectWithValue(err.response?.data?.detail || "Failed to update comment");
     }
@@ -245,10 +252,8 @@ export const createBlogAttachment = createAsyncThunk(
         file_public_id: publicId,
       });
 
-      console.log("✅ Attachment created in backend:", res.data);
       return res.data;
     } catch (err) {
-      console.error("❌ Failed to create attachment:", err);
       return rejectWithValue("Failed to create attachment");
     }
   }
@@ -259,7 +264,7 @@ export const deleteAttachment = createAsyncThunk(
   async (attachmentId, { rejectWithValue }) => {
     try {
       await api.delete(`/attachments/${attachmentId}`);
-      // Return the ID so reducer can remove it
+
       return attachmentId;
     } catch (err) {
       return rejectWithValue(err.response?.data?.detail || "Failed to delete attachment");

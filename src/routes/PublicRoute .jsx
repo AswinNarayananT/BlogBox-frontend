@@ -6,6 +6,7 @@ export default function PublicRoute() {
   const location = useLocation();
 
   if (user) {
+    console.log("redirecting with user",user)
     
     const from = location.state?.from?.pathname || "/";
     return <Navigate to={from} replace />;

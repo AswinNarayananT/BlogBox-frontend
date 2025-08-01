@@ -4,17 +4,15 @@ import {
   FaThumbsDown,
   FaEye,
   FaBookmark,
-  FaQuoteLeft,
-  FaCoffee,
 } from "react-icons/fa";
 import BlogLoader from "./BlogLoader";
 import { useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
-import { fetchBlogs } from "../redux/blog/blogThunk";
+import { fetchMyBlogs } from "../redux/blog/blogThunk";
 import { toast } from "react-hot-toast";
 import { useEffect, useState } from "react";
 
-const BlogFeed = () => {
+const MyBlogs = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const { items: blogs, loading, error, pagination } = useSelector((state) => state.blogs);
@@ -24,12 +22,22 @@ const BlogFeed = () => {
   const pageSize = 10;
 
   useEffect(() => {
-    dispatch(fetchBlogs({ page: currentPage, pageSize }));
-  }, [currentPage]);
+    if (user?.id) {
+      dispatch(fetchMyBlogs({ page: currentPage, page_size: pageSize }));
+    }
+  }, [currentPage, user]);
 
   useEffect(() => {
     if (error) {
-      toast.error(error);
+      if (typeof error === "string") {
+        toast.error(error);
+      } else if (Array.isArray(error?.detail)) {
+        error.detail.forEach((e) => toast.error(e.msg));
+      } else if (error?.msg) {
+        toast.error(error.msg);
+      } else {
+        toast.error("An unknown error occurred.");
+      }
     }
   }, [error]);
 
@@ -42,7 +50,6 @@ const BlogFeed = () => {
   const renderPageNumbers = () => {
     const totalPages = pagination?.total_pages || 1;
     const pages = [];
-
     const start = Math.max(1, currentPage - 2);
     const end = Math.min(totalPages, currentPage + 2);
 
@@ -68,26 +75,12 @@ const BlogFeed = () => {
 
   return (
     <div className="max-w-4xl mx-auto px-6 py-12">
+      <h1 className="text-3xl font-bold text-purple-400 mb-8">My Blogs</h1>
+
       {!loading && blogs.length === 0 && !error && (
-        <div className="text-center py-20">
-          <div className="relative">
-            <FaQuoteLeft className="text-6xl text-gray-700 mx-auto mb-6 opacity-50" />
-            <div className="absolute inset-0 flex items-center justify-center">
-              <FaCoffee className="text-3xl text-purple-400 animate-pulse" />
-            </div>
-          </div>
-          <p className="text-xl mb-8 text-gray-400 font-light italic">
-            "The page is blank, but the possibilities are endless..."
-          </p>
-          {user?.is_superuser && (
-            <button
-              onClick={() => navigate("/blogs/create")}
-              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white px-8 py-4 rounded-full transition-all font-medium shadow-lg hover:shadow-purple-500/25 transform hover:scale-105"
-            >
-              Begin Your Journey
-            </button>
-          )}
-        </div>
+        <p className="text-gray-400 text-center py-10">
+          You haven't written any blogs yet.
+        </p>
       )}
 
       <div className="space-y-8">
@@ -113,10 +106,10 @@ const BlogFeed = () => {
                     <div className="flex items-center space-x-2 text-gray-400">
                       <FaUserCircle className="text-sm" />
                       <span className="text-sm font-medium">
-                        {blog.author?.username || "Anonymous"}
+                        {blog.author?.username || "You"}
                       </span>
                     </div>
-                    <div className="w-1 h-1 bg-gray-600 rounded-full"></div>
+                    <div className="w-1 h-1 bg-gray-600 rounded-full" />
                     <div className="flex items-center space-x-4 text-gray-400 text-sm">
                       <span className="flex items-center space-x-1">
                         <FaEye className="text-xs" />
@@ -186,4 +179,4 @@ const BlogFeed = () => {
   );
 };
 
-export default BlogFeed;
+export default MyBlogs;

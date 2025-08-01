@@ -10,6 +10,7 @@ import CreateBlog from "./pages/CreateBlog";
 import BlogDetail from "./pages/BlogDetail";
 import AdminUsersPage from "./pages/AdminUsersPage";
 import UserProfile from "./pages/UserProfile";
+import MyBlogPage from "./pages/MyBlogPage";
 import NotFound from "./pages/NotFound";
 
 function App() {
@@ -28,11 +29,12 @@ function App() {
 
         <Route element={<ProtectedRoute />}>
           <Route path="/blogs/:id" element={<BlogDetail />} />
+          <Route path="/blogs/create" element={<CreateBlog />} />
+          <Route path="/my-blogs" element={<MyBlogPage />} />
           <Route path="/profile" element={<UserProfile />} />
         </Route>
         
         <Route element={<AdminRoute />}>
-          <Route path="/blogs/create" element={<CreateBlog />} />
           <Route path="/users/manage" element={<AdminUsersPage />} />
         </Route>
 

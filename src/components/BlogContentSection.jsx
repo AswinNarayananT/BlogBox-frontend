@@ -10,7 +10,7 @@ import {
   FaShare,
   FaThumbsUp,
   FaThumbsDown,
-  FaSpinner ,
+  FaSpinner,
 } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
 import { updateBlog, likeBlog, unlikeBlog } from "../redux/blog/blogThunk";
@@ -36,10 +36,14 @@ export default function BlogContentSection({
   const [imageLoading, setImageLoading] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  // Check if current user is the author of the blog
+  const isAuthor = user?.id === blog.author_id;
+  // Check if current user is admin/superuser
+  const isAdmin = user?.is_superuser;
 
   const handleUpdate = async (field, value) => {
-    if (!user?.is_superuser) {
-      toast.error("Only superusers can update the blog.");
+    if (!isAuthor) {
+      toast.error("Only the author can update the blog.");
       return;
     }
     try {
@@ -55,35 +59,71 @@ export default function BlogContentSection({
     }
   };
 
-const handleImageSelect = (e) => {
-  if (!user?.is_superuser) {
-    toast.error("Only superusers can update the image.");
-    return;
-  }
+  const handleImageSelect = (e) => {
+    if (!isAuthor) {
+      toast.error("Only the author can update the image.");
+      return;
+    }
 
-  const file = e.target.files[0];
-  if (file) {
-    const reader = new FileReader();
-    reader.onload = () => {
-      setPreviewImage(reader.result);
-    };
-    reader.readAsDataURL(file);
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = () => {
+        setPreviewImage(reader.result);
+      };
+      reader.readAsDataURL(file);
 
-    setImageLoading(true);
+      setImageLoading(true);
 
-    dispatch(updateBlog({ blogId: blog.id, data: { image: file } }))
-      .unwrap()
-      .then(() => {
-        toast.success("Image updated successfully!");
-      })
-      .catch(() => {
-        toast.error("Failed to update image");
-        setPreviewImage(null);
-      })
-      .finally(() => setImageLoading(false));
-  }
-};
+      dispatch(updateBlog({ blogId: blog.id, data: { image: file } }))
+        .unwrap()
+        .then(() => {
+          toast.success("Image updated successfully!");
+        })
+        .catch(() => {
+          toast.error("Failed to update image");
+          setPreviewImage(null);
+        })
+        .finally(() => setImageLoading(false));
+    }
+  };
 
+  const handleBlock = async () => {
+    if (!isAdmin) {
+      toast.error("Only administrators can block blogs.");
+      return;
+    }
+    
+    try {
+      setLoading(true);
+      await dispatch(blockBlog(blog.id)).unwrap();
+      toast.success("Blog blocked successfully!");
+    } catch {
+      toast.error("Failed to block blog");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!isAuthor) {
+      toast.error("Only the author can delete the blog.");
+      return;
+    }
+    
+    if (window.confirm("Are you sure you want to delete this blog? This action cannot be undone.")) {
+      try {
+        setLoading(true);
+        await dispatch(deleteBlog(blog.id)).unwrap();
+        toast.success("Blog deleted successfully!");
+        // Redirect or handle post-deletion logic here
+      } catch {
+        toast.error("Failed to delete blog");
+      } finally {
+        setLoading(false);
+      }
+    }
+  };
 
   const handleLike = async () => {
     try {
@@ -118,13 +158,13 @@ const handleImageSelect = (e) => {
     }
   };
 
-
   if (loading) {
     return <BlogLoader />;
   }
 
   return (
     <div className="max-w-6xl mx-auto bg-black/80 border border-gray-800 rounded-3xl shadow-2xl p-12 mb-20">
+
       {/* Title */}
       <div className="flex justify-center items-center mb-8">
         {editingTitle ? (
@@ -155,7 +195,7 @@ const handleImageSelect = (e) => {
             <h1 className="text-4xl font-extrabold text-center bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent tracking-tight">
               {title}
             </h1>
-            {user?.is_superuser && (
+            {isAuthor && (
               <button
                 onClick={() => setEditingTitle(true)}
                 className="ml-3 text-gray-400 hover:text-white transition-colors"
@@ -167,64 +207,63 @@ const handleImageSelect = (e) => {
         )}
       </div>
 
-{/* Image */}
-{previewImage ? (
-  <div className="relative mb-8">
-    <img
-      src={previewImage}
-      alt="Blog"
-      className="w-full h-[450px] object-cover rounded-2xl cursor-pointer shadow-lg"
-      onClick={() => setShowImagePreview(true)}
-    />
+      {/* Image */}
+      {previewImage ? (
+        <div className="relative mb-8">
+          <img
+            src={previewImage}
+            alt="Blog"
+            className="w-full h-[450px] object-cover rounded-2xl cursor-pointer shadow-lg"
+            onClick={() => setShowImagePreview(true)}
+          />
 
-    {/* Loader overlay only for image */}
-    {imageLoading && (
-      <div className="absolute inset-0 bg-black/60 flex items-center justify-center rounded-2xl">
-        <FaSpinner className="animate-spin text-white text-3xl" />
-      </div>
-    )}
+          {/* Loader overlay only for image */}
+          {imageLoading && (
+            <div className="absolute inset-0 bg-black/60 flex items-center justify-center rounded-2xl">
+              <FaSpinner className="animate-spin text-white text-3xl" />
+            </div>
+          )}
 
-    {user?.is_superuser && (
-      <>
-        <button
-          onClick={() => imageInputRef.current.click()}
-          className="absolute top-4 right-4 bg-gray-700/90 text-white p-3 rounded-full hover:bg-gray-800 transition-all duration-200 shadow-lg"
-        >
-          <FaEdit />
-        </button>
-        <input
-          type="file"
-          ref={imageInputRef}
-          onChange={handleImageSelect}
-          accept="image/*"
-          className="hidden"
-        />
-      </>
-    )}
-  </div>
-) : (
-  <>
-    {user?.is_superuser && (
-      <div className="flex justify-center mb-8">
-        <button
-          onClick={() => imageInputRef.current.click()}
-          className="flex items-center space-x-2 bg-gray-800 text-white px-5 py-3 rounded-full hover:bg-gray-700 transition-colors shadow-lg"
-        >
-          <FaPlus className="text-lg" />
-          <span>Add Image</span>
-        </button>
-        <input
-          type="file"
-          ref={imageInputRef}
-          onChange={handleImageSelect}
-          accept="image/*"
-          className="hidden"
-        />
-      </div>
-    )}
-  </>
-)}
-
+          {isAuthor && (
+            <>
+              <button
+                onClick={() => imageInputRef.current.click()}
+                className="absolute top-4 right-4 bg-gray-700/90 text-white p-3 rounded-full hover:bg-gray-800 transition-all duration-200 shadow-lg"
+              >
+                <FaEdit />
+              </button>
+              <input
+                type="file"
+                ref={imageInputRef}
+                onChange={handleImageSelect}
+                accept="image/*"
+                className="hidden"
+              />
+            </>
+          )}
+        </div>
+      ) : (
+        <>
+          {isAuthor && (
+            <div className="flex justify-center mb-8">
+              <button
+                onClick={() => imageInputRef.current.click()}
+                className="flex items-center space-x-2 bg-gray-800 text-white px-5 py-3 rounded-full hover:bg-gray-700 transition-colors shadow-lg"
+              >
+                <FaPlus className="text-lg" />
+                <span>Add Image</span>
+              </button>
+              <input
+                type="file"
+                ref={imageInputRef}
+                onChange={handleImageSelect}
+                accept="image/*"
+                className="hidden"
+              />
+            </div>
+          )}
+        </>
+      )}
 
       {/* Meta */}
       <div className="flex justify-center flex-wrap gap-6 text-gray-400 text-sm mb-10">
@@ -240,11 +279,10 @@ const handleImageSelect = (e) => {
           <FaEye className="mr-2" />
           {blog.read_count} reads
         </div>
-       <div className="flex items-center">
-        <FaComments className="mr-2" />
-        {selectedComments ? selectedComments.length : 0} comments
-      </div>
-
+        <div className="flex items-center">
+          <FaComments className="mr-2" />
+          {selectedComments ? selectedComments.length : 0} comments
+        </div>
       </div>
 
       {/* Like and Share Buttons */}
@@ -278,7 +316,7 @@ const handleImageSelect = (e) => {
 
       {/* Content */}
       <div className="relative max-w-3xl mx-auto mb-14">
-        {user?.is_superuser && (
+        {isAuthor && (
           <button
             onClick={() => setEditingContent(true)}
             className="absolute -right-12 top-0 text-gray-400 hover:text-white transition-colors p-2 rounded-full hover:bg-gray-800"

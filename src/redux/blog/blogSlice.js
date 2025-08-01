@@ -16,6 +16,7 @@ import {
   deleteComment,
   createBlogAttachment,
   deleteAttachment,
+  fetchMyBlogs,
 } from "./blogThunk";
 
 const blogSlice = createSlice({
@@ -56,15 +57,29 @@ const blogSlice = createSlice({
       })
       .addCase(fetchBlogs.fulfilled, (state, action) => {
         state.loading = false;
-        if (action.meta.arg.skip === 0) {
-          state.items = action.payload;
-        } else {
-          const existingIds = state.items.map((b) => b.id);
-          const newBlogs = action.payload.filter((b) => !existingIds.includes(b.id));
-          state.items = [...state.items, ...newBlogs];
-        }
+
+        const { data, pagination } = action.payload;
+
+        state.items = data; 
+        state.pagination = pagination;
       })
       .addCase(fetchBlogs.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      })
+
+      // MyBlogs
+      .addCase(fetchMyBlogs.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchMyBlogs.fulfilled, (state, action) => {
+        state.loading = false;
+        const { data, pagination } = action.payload;
+        state.items = data;
+        state.pagination = pagination;
+      })
+      .addCase(fetchMyBlogs.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
       })
