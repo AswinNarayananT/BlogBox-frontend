@@ -17,6 +17,7 @@ import {
   createBlogAttachment,
   deleteAttachment,
   fetchMyBlogs,
+  blockBlog,
 } from "./blogThunk";
 
 const blogSlice = createSlice({
@@ -116,6 +117,21 @@ const blogSlice = createSlice({
       .addCase(updateBlog.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+      })
+
+      //Block blog
+      .addCase(blockBlog.fulfilled, (state, action) => {
+        state.loading = false;
+        const { blog_id, is_published } = action.payload;
+
+        const blog = state.items.find((b) => b.id === blog_id);
+        if (blog) {
+          blog.is_published = is_published;
+        }
+
+        if (state.selectedBlog && state.selectedBlog.id === blog_id) {
+          state.selectedBlog.is_published = is_published;
+        }
       })
 
       .addCase(deleteBlog.pending, (state) => {
@@ -232,9 +248,6 @@ const blogSlice = createSlice({
       })
 
       // Create comment
-      .addCase(createComment.pending, (state) => {
-        state.selectedCommentsLoading = true;
-      })
       .addCase(createComment.fulfilled, (state, action) => {
         state.selectedCommentsLoading = false;
         state.selectedComments = [...state.selectedComments, action.payload];
@@ -245,10 +258,6 @@ const blogSlice = createSlice({
       })
 
       //update comment
-
-      .addCase(updateComment.pending, (state) => {
-        state.selectedCommentsLoading = true;
-      })
       .addCase(updateComment.fulfilled, (state, action) => {
         state.selectedCommentsLoading = false;
         const updated = action.payload;
@@ -263,9 +272,6 @@ const blogSlice = createSlice({
       })
 
       //delete comment
-      .addCase(deleteComment.pending, (state) => {
-        state.selectedCommentsLoading = true;
-      })
       .addCase(deleteComment.fulfilled, (state, action) => {
         state.selectedCommentsLoading = false;
         // Remove deleted comment by id

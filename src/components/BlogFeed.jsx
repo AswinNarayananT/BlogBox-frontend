@@ -21,7 +21,7 @@ const BlogFeed = () => {
   const user = useSelector((state) => state.auth.user);
 
   const [currentPage, setCurrentPage] = useState(1);
-  const pageSize = 10;
+  const pageSize = 5;
 
   useEffect(() => {
     dispatch(fetchBlogs({ page: currentPage, pageSize }));

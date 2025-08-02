@@ -5,14 +5,16 @@ import { FaArrowLeft, FaTrash, FaBan } from "react-icons/fa";
 import { toast } from "react-hot-toast";
 import {
   fetchBlogDetail,
+  fetchBlogAttachments,
   markBlogAsSeen,
   deleteBlog,
   blockBlog,
 } from "../redux/blog/blogThunk";
-import AttachmentPreviewModal from "../components/AttachmentPreviewModal ";
-import ImagePreviewModal from "../components/ImagePreviewModal ";
-import CommentsSection from "../components/CommentsSection ";
+import AttachmentPreviewModal from "../components/AttachmentPreviewModal";
+import ImagePreviewModal from "../components/ImagePreviewModal";
+import CommentsSection from "../components/CommentsSection";
 import BlogContentSection from "../components/BlogContentSection";
+import AttachmentGrid from "../components/AttachmentGrid";
 import BlogLoader from "../components/BlogLoader";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
@@ -31,15 +33,18 @@ export default function BlogDetail() {
   const navigate = useNavigate();
   const blog = useSelector((state) => state.blogs.selectedBlog);
   const user = useSelector((state) => state.auth.user);
+  const attachments = useSelector((state) => state.blogs.selectedAttachments);
 
-  const [showImagePreview, setShowImagePreview] = useState(false);
-  const [showAttachmentPreview, setShowAttachmentPreview] = useState(false);
+  const [imagePreview, setImagePreview] = useState({ show: false, url: null });
+  const [attachmentPreview, setAttachmentPreview] = useState({
+    show: false,
+    url: null,
+    type: null,
+  });
 
-  // Modal states
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
   const [openBlockModal, setOpenBlockModal] = useState(false);
 
-  // Check permissions
   const isAuthor = user?.id === blog?.author_id;
   const isAdmin = user?.is_superuser;
 
@@ -49,6 +54,7 @@ export default function BlogDetail() {
 
   useEffect(() => {
     dispatch(fetchBlogDetail(id));
+    dispatch(fetchBlogAttachments(id));
   }, [dispatch, id]);
 
   useEffect(() => {
@@ -57,9 +63,30 @@ export default function BlogDetail() {
     }
   }, [blog, dispatch]);
 
-  if (!blog) {
-    return <BlogLoader />;
-  }
+  const getFileType = (url) => {
+    if (!url) return "unknown";
+    const ext = url.split(".").pop().toLowerCase();
+    if (["jpg", "jpeg", "png", "gif", "webp", "svg"].includes(ext)) return "image";
+    if (["pdf"].includes(ext)) return "pdf";
+    if (["mp4", "webm", "mov"].includes(ext)) return "video";
+    return "file";
+  };
+
+  const handleImagePreview = (imageUrl) => {
+    setImagePreview({ show: true, url: imageUrl });
+  };
+
+  const handleAttachmentPreview = (attachmentUrl, fileType) => {
+    setAttachmentPreview({
+      show: true,
+      url: attachmentUrl,
+      type: fileType || getFileType(attachmentUrl),
+    });
+  };
+
+  const closeImagePreview = () => setImagePreview({ show: false, url: null });
+  const closeAttachmentPreview = () =>
+    setAttachmentPreview({ show: false, url: null, type: null });
 
   const handleDeleteConfirmed = () => {
     dispatch(deleteBlog(blog.id))
@@ -75,122 +102,195 @@ export default function BlogDetail() {
   const handleBlockConfirmed = () => {
     dispatch(blockBlog(blog.id))
       .unwrap()
-      .then(() => {
-        toast.success("Blog blocked successfully!");
-        navigate("/");
+      .then((res) => {
+        const verb = res.is_published ? "unblocked" : "blocked";
+        toast.success(`Blog ${verb} successfully!`);
       })
-      .catch(() => toast.error("Failed to block blog"));
+      .catch(() => toast.error("Failed to toggle blog visibility"));
     setOpenBlockModal(false);
   };
+
+  if (!blog) return <BlogLoader />;
 
   return (
     <div className="flex flex-col min-h-screen bg-black text-white">
       <Navbar />
 
-      <main className="flex-grow flex flex-col items-center p-6">
-        <button
-          onClick={() => navigate(-1)}
-          className="flex items-center bg-gray-800 text-white px-6 py-3 rounded-full hover:bg-gray-700 transition mb-8 self-start"
-        >
-          <FaArrowLeft className="mr-2" />
-          Back to Blogs
-        </button>
+      <main className="flex-grow">
+        {/* Back Button Container */}
+        <div className="w-full px-4 sm:px-6 lg:px-8 pt-6 pb-4">
+          <div className="max-w-6xl mx-auto">
+            <button
+              onClick={() => navigate(-1)}
+              className="flex items-center bg-gray-800 hover:bg-gray-700 text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-full transition-all duration-200 text-sm sm:text-base font-medium"
+            >
+              <FaArrowLeft className="mr-2 text-sm" />
+              <span className="hidden sm:inline">Back to Blogs</span>
+              <span className="sm:hidden">Back</span>
+            </button>
+          </div>
+        </div>
 
-        <div className="w-full max-w-6xl bg-black backdrop-blur-lg rounded-3xl p-12 shadow-2xl">
-          {/* Header actions */}
-          <div className="flex flex-wrap justify-between items-center mb-14">
-            <div></div>
-            
-            {/* Action Buttons - Show based on user role */}
+        {/* Main Content Container */}
+        <div className="w-full px-4 sm:px-6 lg:px-8 pb-8">
+          <div className="max-w-6xl mx-auto">
+            {/* Blog Content */}
+            <div className="mb-8 lg:mb-12">
+              <BlogContentSection
+                blog={blog}
+                setShowImagePreview={handleImagePreview}
+                setShowAttachmentPreview={handleAttachmentPreview}
+              />
+            </div>
+
+            {/* Attachments Section */}
+            {attachments?.length > 0 && (
+              <div className="mb-8 lg:mb-12">
+                <AttachmentGrid
+                  setShowImagePreview={handleImagePreview}
+                  setShowAttachmentPreview={(url) =>
+                    handleAttachmentPreview(url)
+                  }
+                />
+              </div>
+            )}
+
+            {/* Comments Section */}
+            <div className="mb-8 lg:mb-12">
+              <CommentsSection />
+            </div>
+
+            {/* Admin/Author Actions */}
             {(isAuthor || isAdmin) && (
-              <div className="flex gap-3">
-                {/* Delete button - Only for authors */}
-                {isAuthor && (
-                  <button
-                    onClick={() => setOpenDeleteModal(true)}
-                    className="flex items-center bg-gradient-to-r from-red-600 to-red-800 text-white px-7 py-3 rounded-full hover:from-red-700 hover:to-red-900 transition shadow-lg"
-                  >
-                    <FaTrash className="mr-2" />
-                    Delete
-                  </button>
-                )}
-                
-                {/* Block button - Only for admins */}
-                {isAdmin && (
-                  <button
-                    onClick={() => setOpenBlockModal(true)}
-                    className="flex items-center bg-gradient-to-r from-orange-600 to-orange-800 text-white px-7 py-3 rounded-full hover:from-orange-700 hover:to-orange-900 transition shadow-lg"
-                  >
-                    <FaBan className="mr-2" />
-                    Block
-                  </button>
-                )}
+              <div className="border-t border-gray-800 pt-8">
+                <div className="flex flex-col items-center space-y-4">
+                  <h4 className="text-lg font-semibold text-gray-300 mb-2">
+                    Blog Management
+                  </h4>
+                  <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full sm:w-auto">
+                    {isAuthor && (
+                      <button
+                        onClick={() => setOpenDeleteModal(true)}
+                        className="flex items-center justify-center bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white px-6 sm:px-8 py-3 sm:py-3.5 rounded-lg transition-all duration-200 shadow-lg text-sm sm:text-base font-medium min-w-[140px]"
+                      >
+                        <FaTrash className="mr-2 text-sm" />
+                        Delete Blog
+                      </button>
+                    )}
+                    {isAdmin && (
+                      <button
+                        onClick={() => setOpenBlockModal(true)}
+                        className={`flex items-center justify-center ${
+                          blog.is_published
+                            ? "bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800"
+                            : "bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800"
+                        } text-white px-6 sm:px-8 py-3 sm:py-3.5 rounded-lg transition-all duration-200 shadow-lg text-sm sm:text-base font-medium min-w-[140px]`}
+                      >
+                        <FaBan className="mr-2 text-sm" />
+                        {blog.is_published ? "Block Blog" : "Unblock Blog"}
+                      </button>
+                    )}
+                  </div>
+                  <p className="text-xs sm:text-sm text-gray-500 text-center max-w-md">
+                    {isAuthor && isAdmin 
+                      ? "As the author and admin, you can delete or block/unblock this blog."
+                      : isAuthor 
+                      ? "As the author, you can delete this blog."
+                      : "As an admin, you can block/unblock this blog."
+                    }
+                  </p>
+                </div>
               </div>
             )}
           </div>
-
-          {/* Content */}
-          <BlogContentSection
-            blog={blog}
-            setShowImagePreview={setShowImagePreview}
-            setShowAttachmentPreview={setShowAttachmentPreview}
-          />
-
-          {/* Comments */}
-          <CommentsSection />
         </div>
       </main>
 
-      {/* Modals */}
+      {/* Image Preview Modal */}
       <ImagePreviewModal
-        show={showImagePreview}
-        onClose={() => setShowImagePreview(false)}
-        imageUrl={blog.image}
-      />
-      <AttachmentPreviewModal
-        show={showAttachmentPreview}
-        onClose={() => setShowAttachmentPreview(false)}
-        attachmentUrl={blog.attachment}
+        show={imagePreview.show}
+        onClose={closeImagePreview}
+        imageUrl={imagePreview.url}
       />
 
-      {/* Delete confirmation modal */}
-      <Dialog
-        open={openDeleteModal}
-        onClose={() => setOpenDeleteModal(false)}
+      {/* Attachment Preview Modal */}
+      <AttachmentPreviewModal
+        show={attachmentPreview.show}
+        onClose={closeAttachmentPreview}
+        attachmentUrl={attachmentPreview.url}
+        type={attachmentPreview.type}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <Dialog 
+        open={openDeleteModal} 
+        onClose={() => setOpenDeleteModal(false)} 
+        PaperProps={{ 
+          className: "mx-4",
+          style: {
+            backgroundColor: '#1f2937',
+            color: '#f3f4f6'
+          }
+        }}
       >
-        <DialogTitle>Delete Blog</DialogTitle>
+        <DialogTitle style={{ color: '#f3f4f6' }}>
+          Delete Blog
+        </DialogTitle>
         <DialogContent>
-          <DialogContentText>
-            Are you sure you want to delete this blog? This action cannot be undone.
+          <DialogContentText style={{ color: '#d1d5db' }}>
+            Are you sure you want to delete this blog? This action cannot be undone and will permanently remove the blog and all its comments.
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpenDeleteModal(false)} color="primary">
+          <Button 
+            onClick={() => setOpenDeleteModal(false)} 
+            style={{ color: '#9ca3af' }}
+          >
             Cancel
           </Button>
-          <Button onClick={handleDeleteConfirmed} color="error">
+          <Button 
+            onClick={handleDeleteConfirmed} 
+            style={{ color: '#ef4444' }}
+          >
             Delete
           </Button>
         </DialogActions>
       </Dialog>
 
-      {/* Block confirmation modal */}
-      <Dialog
-        open={openBlockModal}
-        onClose={() => setOpenBlockModal(false)}
+      {/* Block/Unblock Confirmation Modal */}
+      <Dialog 
+        open={openBlockModal} 
+        onClose={() => setOpenBlockModal(false)} 
+        PaperProps={{ 
+          className: "mx-4",
+          style: {
+            backgroundColor: '#1f2937',
+            color: '#f3f4f6'
+          }
+        }}
       >
-        <DialogTitle>Block Blog</DialogTitle>
+        <DialogTitle style={{ color: '#f3f4f6' }}>
+          {blog.is_published ? "Block" : "Unblock"} Blog
+        </DialogTitle>
         <DialogContent>
-          <DialogContentText>
-            Are you sure you want to block this blog? This will make it unavailable to users.
+          <DialogContentText style={{ color: '#d1d5db' }}>
+            {blog.is_published
+              ? "Are you sure you want to block this blog? It will be hidden from all users and won't appear in search results."
+              : "Do you want to unblock this blog and make it visible to users again?"}
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpenBlockModal(false)} color="primary">
+          <Button 
+            onClick={() => setOpenBlockModal(false)} 
+            style={{ color: '#9ca3af' }}
+          >
             Cancel
           </Button>
-          <Button onClick={handleBlockConfirmed} color="warning">
-            Block
+          <Button 
+            onClick={handleBlockConfirmed} 
+            style={{ color: blog.is_published ? '#f59e0b' : '#10b981' }}
+          >
+            {blog.is_published ? "Block" : "Unblock"}
           </Button>
         </DialogActions>
       </Dialog>

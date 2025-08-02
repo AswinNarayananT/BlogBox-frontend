@@ -88,43 +88,6 @@ export default function BlogContentSection({
     }
   };
 
-  const handleBlock = async () => {
-    if (!isAdmin) {
-      toast.error("Only administrators can block blogs.");
-      return;
-    }
-    
-    try {
-      setLoading(true);
-      await dispatch(blockBlog(blog.id)).unwrap();
-      toast.success("Blog blocked successfully!");
-    } catch {
-      toast.error("Failed to block blog");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDelete = async () => {
-    if (!isAuthor) {
-      toast.error("Only the author can delete the blog.");
-      return;
-    }
-    
-    if (window.confirm("Are you sure you want to delete this blog? This action cannot be undone.")) {
-      try {
-        setLoading(true);
-        await dispatch(deleteBlog(blog.id)).unwrap();
-        toast.success("Blog deleted successfully!");
-        // Redirect or handle post-deletion logic here
-      } catch {
-        toast.error("Failed to delete blog");
-      } finally {
-        setLoading(false);
-      }
-    }
-  };
-
   const handleLike = async () => {
     try {
       await dispatch(likeBlog(blog.id)).unwrap();
@@ -163,42 +126,44 @@ export default function BlogContentSection({
   }
 
   return (
-    <div className="max-w-6xl mx-auto bg-black/80 border border-gray-800 rounded-3xl shadow-2xl p-12 mb-20">
+    <div className="w-full max-w-6xl mx-auto bg-black/80 rounded-2xl sm:rounded-3xl shadow-2xl p-4 sm:p-6 md:p-8 lg:p-12 mb-8 sm:mb-12 lg:mb-20">
 
       {/* Title */}
-      <div className="flex justify-center items-center mb-8">
+      <div className="flex flex-col sm:flex-row justify-center items-center gap-3 mb-6 sm:mb-8">
         {editingTitle ? (
-          <>
+          <div className="w-full flex flex-col sm:flex-row items-center gap-2">
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="bg-gray-900 text-white p-3 rounded mr-2 w-full"
+              className="w-full bg-gray-900 text-white p-3 rounded mr-0 sm:mr-2"
             />
-            <button
-              onClick={() => handleUpdate("title", title)}
-              className="bg-green-600 text-white px-4 py-3 rounded mr-2"
-            >
-              <FaCheck />
-            </button>
-            <button
-              onClick={() => {
-                setEditingTitle(false);
-                setTitle(blog.title);
-              }}
-              className="bg-red-600 text-white px-4 py-3 rounded"
-            >
-              <FaTimes />
-            </button>
-          </>
+            <div className="flex gap-2">
+              <button
+                onClick={() => handleUpdate("title", title)}
+                className="bg-green-600 text-white px-4 py-3 rounded"
+              >
+                <FaCheck />
+              </button>
+              <button
+                onClick={() => {
+                  setEditingTitle(false);
+                  setTitle(blog.title);
+                }}
+                className="bg-red-600 text-white px-4 py-3 rounded"
+              >
+                <FaTimes />
+              </button>
+            </div>
+          </div>
         ) : (
           <>
-            <h1 className="text-4xl font-extrabold text-center bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent tracking-tight">
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-center bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent tracking-tight">
               {title}
             </h1>
             {isAuthor && (
               <button
                 onClick={() => setEditingTitle(true)}
-                className="ml-3 text-gray-400 hover:text-white transition-colors"
+                className="ml-0 sm:ml-3 mt-2 sm:mt-0 text-gray-400 hover:text-white transition-colors"
               >
                 <FaEdit />
               </button>
@@ -209,18 +174,18 @@ export default function BlogContentSection({
 
       {/* Image */}
       {previewImage ? (
-        <div className="relative mb-8">
+        <div className="relative mb-6 sm:mb-8">
           <img
             src={previewImage}
             alt="Blog"
-            className="w-full h-[450px] object-cover rounded-2xl cursor-pointer shadow-lg"
+            className="w-full h-48 sm:h-64 md:h-80 lg:h-[450px] object-cover rounded-xl sm:rounded-2xl cursor-pointer shadow-lg"
             onClick={() => setShowImagePreview(true)}
           />
 
           {/* Loader overlay only for image */}
           {imageLoading && (
-            <div className="absolute inset-0 bg-black/60 flex items-center justify-center rounded-2xl">
-              <FaSpinner className="animate-spin text-white text-3xl" />
+            <div className="absolute inset-0 bg-black/60 flex items-center justify-center rounded-xl sm:rounded-2xl">
+              <FaSpinner className="animate-spin text-white text-2xl sm:text-3xl" />
             </div>
           )}
 
@@ -228,7 +193,7 @@ export default function BlogContentSection({
             <>
               <button
                 onClick={() => imageInputRef.current.click()}
-                className="absolute top-4 right-4 bg-gray-700/90 text-white p-3 rounded-full hover:bg-gray-800 transition-all duration-200 shadow-lg"
+                className="absolute top-3 sm:top-4 right-3 sm:right-4 bg-gray-700/90 text-white p-2 sm:p-3 rounded-full hover:bg-gray-800 transition-all duration-200 shadow-lg"
               >
                 <FaEdit />
               </button>
@@ -245,13 +210,13 @@ export default function BlogContentSection({
       ) : (
         <>
           {isAuthor && (
-            <div className="flex justify-center mb-8">
+            <div className="flex justify-center mb-6 sm:mb-8">
               <button
                 onClick={() => imageInputRef.current.click()}
-                className="flex items-center space-x-2 bg-gray-800 text-white px-5 py-3 rounded-full hover:bg-gray-700 transition-colors shadow-lg"
+                className="flex items-center space-x-2 bg-gray-800 text-white px-4 sm:px-5 py-3 rounded-full hover:bg-gray-700 transition-colors shadow-lg"
               >
-                <FaPlus className="text-lg" />
-                <span>Add Image</span>
+                <FaPlus className="text-base sm:text-lg" />
+                <span className="text-sm sm:text-base">Add Image</span>
               </button>
               <input
                 type="file"
@@ -266,7 +231,7 @@ export default function BlogContentSection({
       )}
 
       {/* Meta */}
-      <div className="flex justify-center flex-wrap gap-6 text-gray-400 text-sm mb-10">
+      <div className="flex justify-center flex-wrap gap-4 sm:gap-6 text-gray-400 text-xs sm:text-sm mb-8 sm:mb-10">
         <div className="flex items-center">
           <FaCalendarAlt className="mr-2" />
           {new Date(blog.created_at).toLocaleDateString("en-US", {
@@ -286,28 +251,26 @@ export default function BlogContentSection({
       </div>
 
       {/* Like and Share Buttons */}
-      <div className="flex justify-center items-center gap-4 mb-12 pb-8 border-b border-gray-700">
-        <div className="flex items-center bg-gray-900/60 rounded-full p-2">
-          <button
-            onClick={handleLike}
-            className="flex items-center space-x-2 px-4 py-2 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-white font-medium hover:from-purple-700 hover:to-pink-700 transition-all duration-200 shadow-lg hover:shadow-xl"
-          >
-            <FaThumbsUp className="text-sm" />
-            <span>{blog.likes || 0}</span>
-          </button>
-          
-          <button
-            onClick={handleUnlike}
-            className="flex items-center space-x-2 px-4 py-2 rounded-full bg-gray-600 text-white font-medium hover:bg-gray-700 transition-all duration-200 shadow-lg hover:shadow-xl ml-2"
-          >
-            <FaThumbsDown className="text-sm" />
-            <span>{blog.unlikes || 0}</span>
-          </button>
-        </div>
+      <div className="flex flex-col sm:flex-row justify-center items-center gap-4 mb-10 sm:mb-12 pb-6 sm:pb-8 border-b border-gray-700">
+        <button
+          onClick={handleLike}
+          className="flex items-center space-x-2 px-4 sm:px-6 py-2 sm:py-3 rounded-full bg-gradient-to-r from-purple-600 to-pink-600 text-white font-medium hover:from-purple-700 hover:to-pink-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+        >
+          <FaThumbsUp className="text-sm" />
+          <span>{blog.likes || 0}</span>
+        </button>
+        
+        <button
+          onClick={handleUnlike}
+          className="flex items-center space-x-2 px-4 sm:px-6 py-2 sm:py-3 rounded-full bg-gray-600 text-white font-medium hover:bg-gray-700 transition-all duration-200 shadow-lg hover:shadow-xl"
+        >
+          <FaThumbsDown className="text-sm" />
+          <span>{blog.unlikes || 0}</span>
+        </button>
         
         <button
           onClick={handleShare}
-          className="flex items-center space-x-2 px-6 py-3 rounded-full bg-gradient-to-r from-blue-600 to-blue-700 text-white font-medium hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-lg hover:shadow-xl"
+          className="flex items-center space-x-2 px-4 sm:px-6 py-2 sm:py-3 rounded-full bg-gradient-to-r from-blue-600 to-blue-700 text-white font-medium hover:from-blue-700 hover:to-blue-800 transition-all duration-200 shadow-lg hover:shadow-xl"
         >
           <FaShare className="text-sm" />
           <span>Share</span>
@@ -315,18 +278,18 @@ export default function BlogContentSection({
       </div>
 
       {/* Content */}
-      <div className="relative max-w-3xl mx-auto mb-14">
+      <div className="relative max-w-3xl mx-auto mb-8 sm:mb-14">
         {isAuthor && (
           <button
             onClick={() => setEditingContent(true)}
-            className="absolute -right-12 top-0 text-gray-400 hover:text-white transition-colors p-2 rounded-full hover:bg-gray-800"
+            className="absolute -right-2 sm:-right-12 top-0 text-gray-400 hover:text-white transition-colors p-2 rounded-full hover:bg-gray-800"
             title="Edit content"
           >
             <FaEdit />
           </button>
         )}
         
-        <div className="text-gray-300 text-lg whitespace-pre-wrap text-center">
+        <div className="text-gray-300 text-base sm:text-lg whitespace-pre-wrap text-center">
           {editingContent ? (
             <>
               <textarea
@@ -335,10 +298,10 @@ export default function BlogContentSection({
                 rows={8}
                 className="w-full bg-gray-900 text-white p-4 rounded-xl border border-gray-700 focus:border-purple-500 focus:outline-none transition-all"
               />
-              <div className="flex justify-center mt-3">
+              <div className="flex justify-center mt-3 gap-2">
                 <button
                   onClick={() => handleUpdate("content", content)}
-                  className="bg-green-600 text-white px-5 py-3 rounded mr-2 hover:bg-green-700 transition-colors"
+                  className="bg-green-600 text-white px-5 py-3 rounded hover:bg-green-700 transition-colors"
                 >
                   <FaCheck />
                 </button>
@@ -358,9 +321,6 @@ export default function BlogContentSection({
           )}
         </div>
       </div>
-
-      {/* Attachment */}
-      <AttachmentGrid />
     </div>
   );
 }

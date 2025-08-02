@@ -114,9 +114,15 @@ export default function CreateBlog() {
               </div>
 
               <div className="flex items-center space-x-2">
-                <Field type="checkbox" name="is_published" className="accent-purple-600" />
+                <Field
+                  type="checkbox"
+                  name="is_published"
+                  disabled
+                  className="accent-purple-600 disabled:opacity-100 disabled:cursor-not-allowed"
+                />
                 <label className="font-medium">Publish</label>
               </div>
+
 
               <button
                 type="submit"

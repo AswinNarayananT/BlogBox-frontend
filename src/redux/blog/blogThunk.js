@@ -134,9 +134,18 @@ export const deleteBlog = createAsyncThunk(
 
 
 export const blockBlog = createAsyncThunk(
-  "blogs/deleteBlog",
-
+  "blogs/blockBlog",
+  async (blogId, { rejectWithValue }) => {
+    try {
+      const res = await api.put(`/blogs/${blogId}/toggle-publish/`);
+      return res.data;  
+    } catch (err) {
+      console.log("❌ Full Axios error:", JSON.stringify(err, Object.getOwnPropertyNames(err)));
+      return rejectWithValue("Network error — check console & backend server.");
+    }
+  }
 );
+
 
 export const markBlogAsSeen = createAsyncThunk(
   "blogs/markAsSeen",

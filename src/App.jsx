@@ -8,7 +8,7 @@ import ProtectedRoute from "./routes/ProtectedRoute ";
 import AdminRoute from "./routes/AdminRoute ";
 import CreateBlog from "./pages/CreateBlog";
 import BlogDetail from "./pages/BlogDetail";
-import AdminUsersPage from "./pages/AdminUsersPage";
+import AdminPage from "./pages/AdminPage";
 import UserProfile from "./pages/UserProfile";
 import MyBlogPage from "./pages/MyBlogPage";
 import NotFound from "./pages/NotFound";
@@ -35,7 +35,7 @@ function App() {
         </Route>
         
         <Route element={<AdminRoute />}>
-          <Route path="/users/manage" element={<AdminUsersPage />} />
+          <Route path="/users/manage" element={<AdminPage />} />
         </Route>
 
         <Route path="*" element={<NotFound />} />

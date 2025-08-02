@@ -26,7 +26,6 @@ const UserProfile = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const user = useSelector((state) => state.auth.user);
-  const globalLoading = useSelector((state) => state.auth.loading);
 
   const profilePicRef = useRef();
 
@@ -101,42 +100,40 @@ const UserProfile = () => {
     setShowPasswords((prev) => ({ ...prev, [field]: !prev[field] }));
   };
 
-const handleChangePassword = async () => {
-  if (passwordData.newPassword !== passwordData.confirmPassword) {
-    toast.error("New passwords don't match");
-    return;
-  }
+  const handleChangePassword = async () => {
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      toast.error("New passwords don't match");
+      return;
+    }
 
-  try {
-    setChangingPassword(true);
+    try {
+      setChangingPassword(true);
 
-    await dispatch(
-      changePassword({
-        current_password: passwordData.currentPassword,
-        new_password: passwordData.newPassword,
-      })
-    ).unwrap();
+      await dispatch(
+        changePassword({
+          current_password: passwordData.currentPassword,
+          new_password: passwordData.newPassword,
+        })
+      ).unwrap();
 
-    toast.success("Password changed successfully!");
+      toast.success("Password changed successfully!");
 
-    setShowPasswordModal(false);
-    setPasswordData({
-      currentPassword: "",
-      newPassword: "",
-      confirmPassword: "",
-    });
-  } catch (error) {
-    toast.error(error || "Failed to change password");
-  } finally {
-    setChangingPassword(false);
-  }
-};
-
-
+      setShowPasswordModal(false);
+      setPasswordData({
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      });
+    } catch (error) {
+      toast.error(error || "Failed to change password");
+    } finally {
+      setChangingPassword(false);
+    }
+  };
 
   if (!user) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen bg-black">
         <div className="text-gray-400 text-xl">Loading profile...</div>
       </div>
     );
@@ -147,23 +144,31 @@ const handleChangePassword = async () => {
       <Navbar />
 
       <main className="flex-grow flex flex-col items-center p-6">
-        <button
-          onClick={() => navigate(-1)}
-          className="flex items-center bg-gray-800 text-white px-6 py-3 rounded-full hover:bg-gray-700 transition mb-8 self-start"
-        >
-          <FaArrowLeft className="mr-2" />
-          Back
-        </button>
+        {/* Back Button Container */}
+        <div className="w-full px-4 sm:px-6 lg:px-8 pt-6 pb-4">
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center bg-gray-800 hover:bg-gray-700 text-white px-4 sm:px-6 py-2.5 sm:py-3 rounded-full transition-all duration-200 text-sm sm:text-base font-medium"
+          >
+            <FaArrowLeft className="mr-2 text-sm" />
+            <span className="hidden sm:inline">Back to Dashboard</span>
+            <span className="sm:hidden">Back</span>
+          </button>
+        </div>
 
+        {/* Profile Content */}
         <div className="bg-gray-900/70 backdrop-blur-lg border border-gray-800 rounded-3xl p-12 shadow-2xl max-w-5xl w-full">
-          <div className="text-center mb-12">
-            <h1 className="text-4xl font-extrabold bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent tracking-tight">
-              My Profile
-            </h1>
-          </div>
+          <div className="max-w-5xl mx-auto">
+            {/* Header */}
+            <div className="text-center mb-8 sm:mb-12">
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent tracking-tight">
+                My Profile
+              </h1>
+            </div>
 
-          <div className="grid md:grid-cols-2 gap-12">
-            {/* Left Column */}
+            {/* Profile Content Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
+              {/* Left Column */}
             <div className="text-center">
               <div className="relative inline-block mb-6">
                 {user.profile_pic ? (
@@ -196,88 +201,97 @@ const handleChangePassword = async () => {
               </div>
             </div>
 
-            {/* Right Column */}
-            <div className="space-y-8">
-              <div className="bg-gray-800/50 rounded-2xl p-6 border border-gray-700">
-                <h3 className="text-xl font-semibold text-white mb-4 flex items-center">
-                  <FaUser className="mr-2 text-purple-400" />
-                  Account Information
-                </h3>
+              {/* Right Column - Account Details and Actions */}
+              <div className="space-y-6 sm:space-y-8">
+                {/* Account Information Card */}
+                <div className="bg-white/5 backdrop-blur-sm rounded-xl sm:rounded-2xl p-4 sm:p-6">
+                  <h3 className="text-lg sm:text-xl font-semibold text-white mb-4 sm:mb-6 flex items-center">
+                    <FaUser className="mr-2 text-purple-400" />
+                    Account Information
+                  </h3>
 
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <FaEnvelope className="text-gray-400" />
-                      <span className="text-gray-300">Email</span>
+                  <div className="space-y-4 sm:space-y-5">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                      <div className="flex items-center space-x-3">
+                        <FaEnvelope className="text-gray-400 text-sm" />
+                        <span className="text-gray-300 text-sm sm:text-base">Email</span>
+                      </div>
+                      <span className="text-white font-medium text-sm sm:text-base break-all sm:break-normal">
+                        {user.email}
+                      </span>
                     </div>
-                    <span className="text-white font-medium">{user.email}</span>
-                  </div>
 
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <FaUser className="text-gray-400" />
-                      <span className="text-gray-300">Username</span>
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                      <div className="flex items-center space-x-3">
+                        <FaUser className="text-gray-400 text-sm" />
+                        <span className="text-gray-300 text-sm sm:text-base">Username</span>
+                      </div>
+                      <span className="text-white font-medium text-sm sm:text-base">
+                        {user.username}
+                      </span>
                     </div>
-                    <span className="text-white font-medium">{user.username}</span>
-                  </div>
 
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <FaCalendarAlt className="text-gray-400" />
-                      <span className="text-gray-300">Joined</span>
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                      <div className="flex items-center space-x-3">
+                        <FaCalendarAlt className="text-gray-400 text-sm" />
+                        <span className="text-gray-300 text-sm sm:text-base">Joined</span>
+                      </div>
+                      <span className="text-white font-medium text-sm sm:text-base">
+                        {new Date(user.created_at).toLocaleDateString("en-US", {
+                          year: "numeric",
+                          month: "long",
+                          day: "numeric",
+                        })}
+                      </span>
                     </div>
-                    <span className="text-white font-medium">
-                      {new Date(user.created_at).toLocaleDateString("en-US", {
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                      })}
-                    </span>
-                  </div>
 
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <FaUserShield className="text-gray-400" />
-                      <span className="text-gray-300">Account Status</span>
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                      <div className="flex items-center space-x-3">
+                        <FaUserShield className="text-gray-400 text-sm" />
+                        <span className="text-gray-300 text-sm sm:text-base">Account Status</span>
+                      </div>
+                      <span className="text-green-400 font-medium text-sm sm:text-base">
+                        {user.is_active ? "Active" : "Inactive"}
+                      </span>
                     </div>
-                    <span className="text-green-400 font-medium">
-                      {user.is_active ? "Active" : "Inactive"}
-                    </span>
-                  </div>
 
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3">
-                      <FaCalendarAlt className="text-gray-400" />
-                      <span className="text-gray-300">Last Login</span>
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                      <div className="flex items-center space-x-3">
+                        <FaCalendarAlt className="text-gray-400 text-sm" />
+                        <span className="text-gray-300 text-sm sm:text-base">Last Login</span>
+                      </div>
+                      <span className="text-white font-medium text-sm sm:text-base">
+                        {new Date(user.last_login).toLocaleDateString("en-US", {
+                          year: "numeric",
+                          month: "short",
+                          day: "numeric",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
+                      </span>
                     </div>
-                    <span className="text-white font-medium">
-                      {new Date(user.last_login).toLocaleDateString("en-US", {
-                        year: "numeric",
-                        month: "short",
-                        day: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </span>
                   </div>
                 </div>
+
+                {/* Action Buttons */}
+                <div className="space-y-3 sm:space-y-4">
+                  <button
+                    onClick={handleEditProfile}
+                    className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white py-3 sm:py-4 px-6 rounded-lg sm:rounded-xl font-semibold transition-all duration-200 flex items-center justify-center space-x-2 text-sm sm:text-base"
+                  >
+                    <FaEdit className="text-sm" />
+                    <span>Edit Profile</span>
+                  </button>
+
+                  <button
+                    onClick={() => setShowPasswordModal(true)}
+                    className="w-full bg-gray-700 hover:bg-gray-600 text-white py-3 sm:py-4 px-6 rounded-lg sm:rounded-xl font-semibold transition-all duration-200 flex items-center justify-center space-x-2 text-sm sm:text-base"
+                  >
+                    <FaLock className="text-sm" />
+                    <span>Change Password</span>
+                  </button>
+                </div>
               </div>
-
-              <button
-                onClick={handleEditProfile}
-                className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white py-4 px-6 rounded-xl font-semibold transition-all duration-200 flex items-center justify-center space-x-2"
-              >
-                <FaEdit />
-                <span>Edit Profile</span>
-              </button>
-
-              <button
-                onClick={() => setShowPasswordModal(true)}
-                className="w-full bg-gray-700 hover:bg-gray-600 text-white py-4 px-6 rounded-xl font-semibold transition-all duration-200 flex items-center justify-center space-x-2"
-              >
-                <FaLock />
-                <span>Change Password</span>
-              </button>
             </div>
           </div>
         </div>
@@ -288,8 +302,10 @@ const handleChangePassword = async () => {
       {/* Edit Profile Modal */}
       {showEditModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-900 rounded-2xl p-8 max-w-md w-full border border-gray-700">
-            <h3 className="text-2xl font-bold text-white mb-6 text-center">Edit Profile</h3>
+          <div className="bg-gray-900 rounded-xl sm:rounded-2xl p-6 sm:p-8 max-w-md w-full border border-gray-700 max-h-[90vh] overflow-y-auto">
+            <h3 className="text-xl sm:text-2xl font-bold text-white mb-6 text-center">
+              Edit Profile
+            </h3>
 
             <div className="space-y-6">
               <div className="text-center">
@@ -298,18 +314,19 @@ const handleChangePassword = async () => {
                     <img
                       src={previewImage}
                       alt="Preview"
-                      className="w-24 h-24 rounded-full object-cover border-2 border-purple-500"
+                      className="w-20 h-20 sm:w-24 sm:h-24 rounded-full object-cover border-2 border-purple-500"
                     />
                   ) : (
-                    <div className="w-24 h-24 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center text-2xl font-bold text-white">
+                    <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center text-xl sm:text-2xl font-bold text-white">
                       {editData.username?.charAt(0)?.toUpperCase() || "U"}
                     </div>
                   )}
                   <button
                     onClick={() => profilePicRef.current.click()}
-                    className="absolute bottom-0 right-0 bg-purple-600 hover:bg-purple-700 text-white p-2 rounded-full"
+                    disabled={imageLoading}
+                    className="absolute bottom-0 right-0 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 text-white p-1.5 sm:p-2 rounded-full text-xs sm:text-sm"
                   >
-                    <FaCamera className="text-sm" />
+                    {imageLoading ? <FaSpinner className="animate-spin" /> : <FaCamera />}
                   </button>
                 </div>
                 <input
@@ -320,55 +337,58 @@ const handleChangePassword = async () => {
                   className="hidden"
                 />
                 {imageLoading && (
-                  <div className="mt-2 flex justify-center text-purple-400">
+                  <div className="mt-2 flex justify-center text-purple-400 text-sm">
                     <FaSpinner className="animate-spin mr-2" /> Uploading...
                   </div>
                 )}
               </div>
 
               <div>
-                <label className="block text-gray-300 mb-2">Username</label>
+                <label className="block text-gray-300 mb-2 text-sm sm:text-base">Username</label>
                 <input
                   type="text"
                   value={editData.username}
                   onChange={(e) => setEditData((prev) => ({ ...prev, username: e.target.value }))}
-                  className="w-full bg-gray-800 text-white p-3 rounded-lg border border-gray-700 focus:border-purple-500 focus:outline-none transition-all"
+                  className="w-full bg-gray-800 text-white p-3 rounded-lg border border-gray-700 focus:border-purple-500 focus:outline-none transition-all text-sm sm:text-base"
                 />
               </div>
 
               <div>
-                <label className="block text-gray-300 mb-2">Email (Cannot be changed)</label>
+                <label className="block text-gray-300 mb-2 text-sm sm:text-base">
+                  Email (Cannot be changed)
+                </label>
                 <input
                   type="email"
                   value={user.email}
                   disabled
-                  className="w-full bg-gray-700 text-gray-400 p-3 rounded-lg border border-gray-600 cursor-not-allowed"
+                  className="w-full bg-gray-700 text-gray-400 p-3 rounded-lg border border-gray-600 cursor-not-allowed text-sm sm:text-base"
                 />
               </div>
 
-              <div className="flex space-x-4">
+              <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
                 <button
                   onClick={handleUpdateUsername}
                   disabled={usernameLoading}
-                  className="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 px-4 rounded-lg font-semibold transition-all flex items-center justify-center space-x-2 disabled:opacity-50"
+                  className="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white py-3 px-4 rounded-lg font-semibold transition-all flex items-center justify-center space-x-2 text-sm sm:text-base"
                 >
                   {usernameLoading ? (
                     <>
-                      <FaSpinner className="animate-spin" />
+                      <FaSpinner className="animate-spin text-sm" />
                       <span>Saving...</span>
                     </>
                   ) : (
                     <>
-                      <FaCheck />
+                      <FaCheck className="text-sm" />
                       <span>Save</span>
                     </>
                   )}
                 </button>
                 <button
                   onClick={() => setShowEditModal(false)}
-                  className="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-3 px-4 rounded-lg font-semibold transition-all flex items-center justify-center space-x-2"
+                  disabled={usernameLoading}
+                  className="flex-1 bg-gray-600 hover:bg-gray-700 disabled:bg-gray-700 text-white py-3 px-4 rounded-lg font-semibold transition-all flex items-center justify-center space-x-2 text-sm sm:text-base"
                 >
-                  <FaTimes />
+                  <FaTimes className="text-sm" />
                   <span>Cancel</span>
                 </button>
               </div>
@@ -378,106 +398,89 @@ const handleChangePassword = async () => {
       )}
 
       {/* Change Password Modal */}
-       {showPasswordModal && (
+      {showPasswordModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-900 rounded-2xl p-8 max-w-md w-full border border-gray-700">
-            <h3 className="text-2xl font-bold text-white mb-6 text-center">Change Password</h3>
+          <div className="bg-gray-900 rounded-xl sm:rounded-2xl p-6 sm:p-8 max-w-md w-full border border-gray-700 max-h-[90vh] overflow-y-auto">
+            <h3 className="text-xl sm:text-2xl font-bold text-white mb-6 text-center">
+              Change Password
+            </h3>
             
             <div className="space-y-6">
               {/* Current Password */}
               <div>
-                <label className="block text-gray-300 mb-2">Current Password</label>
+                <label className="block text-gray-300 mb-2 text-sm sm:text-base">Current Password</label>
                 <div className="relative">
                   <input
                     type={showPasswords.current ? "text" : "password"}
                     value={passwordData.currentPassword}
                     onChange={(e) => setPasswordData(prev => ({ ...prev, currentPassword: e.target.value }))}
-                    className="w-full bg-gray-800 text-white p-3 pr-12 rounded-lg border border-gray-700 focus:border-purple-500 focus:outline-none transition-all"
+                    className="w-full bg-gray-800 text-white p-3 pr-12 rounded-lg border border-gray-700 focus:border-purple-500 focus:outline-none transition-all text-sm sm:text-base"
                   />
                   <button
                     type="button"
                     onClick={() => togglePasswordVisibility('current')}
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
                   >
-                    {showPasswords.current ? <FaEyeSlash /> : <FaEye />}
+                    {showPasswords.current ? <FaEyeSlash className="text-sm" /> : <FaEye className="text-sm" />}
                   </button>
                 </div>
               </div>
 
               {/* New Password */}
               <div>
-                <label className="block text-gray-300 mb-2">New Password</label>
+                <label className="block text-gray-300 mb-2 text-sm sm:text-base">New Password</label>
                 <div className="relative">
                   <input
                     type={showPasswords.new ? "text" : "password"}
                     value={passwordData.newPassword}
                     onChange={(e) => setPasswordData(prev => ({ ...prev, newPassword: e.target.value }))}
-                    className="w-full bg-gray-800 text-white p-3 pr-12 rounded-lg border border-gray-700 focus:border-purple-500 focus:outline-none transition-all"
+                    className="w-full bg-gray-800 text-white p-3 pr-12 rounded-lg border border-gray-700 focus:border-purple-500 focus:outline-none transition-all text-sm sm:text-base"
                   />
                   <button
                     type="button"
                     onClick={() => togglePasswordVisibility('new')}
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
                   >
-                    {showPasswords.new ? <FaEyeSlash /> : <FaEye />}
+                    {showPasswords.new ? <FaEyeSlash className="text-sm" /> : <FaEye className="text-sm" />}
                   </button>
                 </div>
               </div>
 
               {/* Confirm Password */}
               <div>
-                <label className="block text-gray-300 mb-2">Confirm New Password</label>
+                <label className="block text-gray-300 mb-2 text-sm sm:text-base">Confirm New Password</label>
                 <div className="relative">
                   <input
                     type={showPasswords.confirm ? "text" : "password"}
                     value={passwordData.confirmPassword}
                     onChange={(e) => setPasswordData(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                    className="w-full bg-gray-800 text-white p-3 pr-12 rounded-lg border border-gray-700 focus:border-purple-500 focus:outline-none transition-all"
+                    className="w-full bg-gray-800 text-white p-3 pr-12 rounded-lg border border-gray-700 focus:border-purple-500 focus:outline-none transition-all text-sm sm:text-base"
                   />
                   <button
                     type="button"
                     onClick={() => togglePasswordVisibility('confirm')}
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
                   >
-                    {showPasswords.confirm ? <FaEyeSlash /> : <FaEye />}
+                    {showPasswords.confirm ? <FaEyeSlash className="text-sm" /> : <FaEye className="text-sm" />}
                   </button>
                 </div>
               </div>
 
               {/* Action Buttons */}
-              <div className="flex space-x-4">
+              <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
                 <button
                   onClick={handleChangePassword}
                   disabled={changingPassword}
-                  className={`flex-1 bg-green-600 hover:bg-green-700 text-white py-3 px-4 rounded-lg font-semibold transition-all flex items-center justify-center space-x-2 ${changingPassword ? "opacity-70 cursor-not-allowed" : ""}`}
+                  className="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white py-3 px-4 rounded-lg font-semibold transition-all flex items-center justify-center space-x-2 text-sm sm:text-base"
                 >
                   {changingPassword ? (
                     <>
-                      <svg
-                        className="animate-spin h-5 w-5 text-white mr-2"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                        ></circle>
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8v8H4z"
-                        ></path>
-                      </svg>
-                      Updating...
+                      <FaSpinner className="animate-spin text-sm" />
+                      <span>Updating...</span>
                     </>
                   ) : (
                     <>
-                      <FaCheck />
+                      <FaCheck className="text-sm" />
                       <span>Update</span>
                     </>
                   )}
@@ -491,9 +494,10 @@ const handleChangePassword = async () => {
                       confirmPassword: "",
                     });
                   }}
-                  className="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-3 px-4 rounded-lg font-semibold transition-all flex items-center justify-center space-x-2"
+                  disabled={changingPassword}
+                  className="flex-1 bg-gray-600 hover:bg-gray-700 disabled:bg-gray-700 text-white py-3 px-4 rounded-lg font-semibold transition-all flex items-center justify-center space-x-2 text-sm sm:text-base"
                 >
-                  <FaTimes />
+                  <FaTimes className="text-sm" />
                   <span>Cancel</span>
                 </button>
               </div>

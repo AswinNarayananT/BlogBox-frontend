@@ -68,31 +68,23 @@ const authSlice = createSlice({
         state.error = action.payload;
       })
 
-      .addCase(updateProfilePic.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
       .addCase(updateProfilePic.fulfilled, (state, action) => {
         state.loading = false;
         state.user = action.payload;
       })
-      .addCase(updateProfilePic.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
 
-      .addCase(changePassword.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(changePassword.fulfilled, (state) => {
-        state.loading = false;
-        state.error = null;
-      })
-      .addCase(changePassword.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
-      })
+      // .addCase(changePassword.pending, (state) => {
+      //   state.loading = true;
+      //   state.error = null;
+      // })
+      // .addCase(changePassword.fulfilled, (state) => {
+      //   state.loading = false;
+      //   state.error = null;
+      // })
+      // .addCase(changePassword.rejected, (state, action) => {
+      //   state.loading = false;
+      //   state.error = action.payload;
+      // })
 
 
       // Logout
