@@ -53,9 +53,21 @@ export default function BlogDetail() {
   }, []);
 
   useEffect(() => {
-    dispatch(fetchBlogDetail(id));
-    dispatch(fetchBlogAttachments(id));
-  }, [dispatch, id]);
+    const loadBlog = async () => {
+      try {
+        await dispatch(fetchBlogDetail(id)).unwrap(); 
+        dispatch(fetchBlogAttachments(id));
+      } catch (error) {
+        if (error?.status === 403 || error?.response?.status === 403) {
+          navigate("/");
+        } else {
+          toast.error("An error occurred while loading the blog.");
+        }
+      }
+    };
+
+    loadBlog();
+  }, [dispatch, id, navigate]);
 
   useEffect(() => {
     if (blog && (!blog.interaction || !blog.interaction.seen)) {

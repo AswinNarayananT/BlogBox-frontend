@@ -89,10 +89,11 @@ export const fetchBlogDetail = createAsyncThunk(
       const res = await api.get(`/blogs/${blogId}`);
       return res.data;
     } catch (err) {
-      return rejectWithValue("Failed to fetch blog detail — see console for details.");
+      return rejectWithValue(err.response);
     }
   }
 );
+
 
 
 export const fetchBlogComments = createAsyncThunk(
@@ -100,12 +101,18 @@ export const fetchBlogComments = createAsyncThunk(
   async ({ blogId, skip = 0, limit = 10 }, { rejectWithValue }) => {
     try {
       const res = await api.get(`/blogs/${blogId}/comments?skip=${skip}&limit=${limit}`);
-      return { comments: res.data, skip }; 
+      return {
+        comments: res.data.items,
+        total: res.data.total,
+        skip,
+        limit,
+      };
     } catch (err) {
       return rejectWithValue("Failed to fetch comments");
     }
   }
 );
+
 
 
 export const fetchBlogAttachments = createAsyncThunk(

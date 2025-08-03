@@ -36,6 +36,9 @@ const blogSlice = createSlice({
     selectedComments: [],
     selectedCommentsLoading: false,
     selectedCommentsError: null,
+    selectedCommentsTotal: 0,
+    selectedCommentsSkip: 0,
+    selectedCommentsLimit: 10,
 
     // Attachments for selected blog
     selectedAttachments: [],
@@ -219,15 +222,19 @@ const blogSlice = createSlice({
         state.selectedCommentsError = null;
       })
       .addCase(fetchBlogComments.fulfilled, (state, action) => {
-        state.selectedCommentsLoading = false;
-        state.selectedCommentsError = null;
+          state.selectedCommentsLoading = false;
+          state.selectedCommentsError = null;
 
-        if (action.payload.skip === 0) {
-          state.selectedComments = action.payload.comments;
-        } else {
-          state.selectedComments = [...state.selectedComments, ...action.payload.comments];
-        }
-      })
+          if (action.payload.skip === 0) {
+            state.selectedComments = action.payload.comments;
+          } else {
+            state.selectedComments = [...state.selectedComments, ...action.payload.comments];
+          }
+
+          state.selectedCommentsTotal = action.payload.total;
+          state.selectedCommentsSkip = action.payload.skip;
+          state.selectedCommentsLimit = action.payload.limit;
+        })
       .addCase(fetchBlogComments.rejected, (state, action) => {
         state.selectedCommentsLoading = false;
         state.selectedCommentsError = action.payload;

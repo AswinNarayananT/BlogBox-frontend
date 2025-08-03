@@ -61,7 +61,7 @@ export default function Login() {
   return (
     <div className="flex flex-col min-h-screen bg-black text-white">
       <Navbar />
-      <main className="flex-grow flex items-center justify-center m-7 p-10">
+      <main className="flex-grow flex items-center justify-center p-4">
         <div className="w-full max-w-md bg-gray-900/80 backdrop-blur-xl border border-gray-800 rounded-3xl p-10 shadow-2xl">
           <h1 className="text-4xl font-extrabold text-center bg-gradient-to-r from-purple-400 to-pink-500 bg-clip-text text-transparent mb-4">
             Welcome Back
