@@ -114,7 +114,6 @@ const CommentsSection = () => {
         .unwrap()
         .then(() => {
           toast.success("Comment deleted successfully!");
-          dispatch(fetchBlogComments({ blogId: id }));
         })
         .catch(() => toast.error("Failed to delete comment"))
         .finally(() => {
