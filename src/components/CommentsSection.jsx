@@ -70,7 +70,6 @@ const CommentsSection = () => {
       .then(() => {
         setNewComment("");
         toast.success("Comment added successfully!");
-        dispatch(fetchBlogComments({ blogId: id }));
       })
       .catch(() => toast.error("Failed to add comment"))
       .finally(() => setAddingComment(false));
@@ -93,7 +92,6 @@ const CommentsSection = () => {
         setEditingCommentId(null);
         setEditingContent("");
         toast.success("Comment updated successfully!");
-        dispatch(fetchBlogComments({ blogId: id }));
       })
       .catch(() => toast.error("Failed to update comment"))
       .finally(() => setUpdatingCommentId(null));

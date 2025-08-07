@@ -257,7 +257,7 @@ const blogSlice = createSlice({
       // Create comment
       .addCase(createComment.fulfilled, (state, action) => {
         state.selectedCommentsLoading = false;
-        state.selectedComments = [...state.selectedComments, action.payload];
+        state.selectedComments = [action.payload, ...state.selectedComments];
       })
       .addCase(createComment.rejected, (state, action) => {
         state.selectedCommentsLoading = false;

@@ -156,16 +156,15 @@ export default function BlogDetail() {
             </div>
 
             {/* Attachments Section */}
-            {attachments?.length > 0 && (
-              <div className="mb-8 lg:mb-12">
-                <AttachmentGrid
-                  setShowImagePreview={handleImagePreview}
-                  setShowAttachmentPreview={(url) =>
-                    handleAttachmentPreview(url)
-                  }
-                />
-              </div>
-            )}
+            {(isAuthor || attachments?.length > 0) && (
+                <div className="mb-8 lg:mb-12">
+                  <AttachmentGrid
+                    setShowImagePreview={handleImagePreview}
+                    setShowAttachmentPreview={(url) => handleAttachmentPreview(url)}
+                  />
+                </div>
+              )}
+
 
             {/* Comments Section */}
             <div className="mb-8 lg:mb-12">
